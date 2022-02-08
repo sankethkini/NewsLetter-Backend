@@ -1,0 +1,111 @@
+
+syntax="proto3";
+
+package userpb.v1;
+import "google/api/annotations.proto";
+import "google/api/client.proto";
+import "google/api/field_behavior.proto";
+import "google/api/resource.proto";
+
+option go_package="github.com/sankethkini/NewsLetter-Backend/proto/userpb";
+option java_multiple_files = true;
+option java_outer_classname = "ApiProto";
+
+option java_package = "com.userpb.v1";
+
+// UserService defines all the endpoints to the user service backend.
+service UserService {
+
+    // Creates the new user
+    rpc CreateUser(CreateUserRequest) returns (User){ 
+        option (google.api.http) = {
+            post: "/userservice/v1/users"
+            body:"user"
+        };
+        option (google.api.method_signature)="user";
+    }
+
+    // Validate user's email with password and return token.
+    rpc ValidateUser(ValidateUserRequest) returns (ValidateUserResponse){
+        option (google.api.http) = { 
+            post : "/userservice/v1/users:validateUser"
+            body : "*"
+        };   
+    }
+
+    // Get email of user by giving user_id.
+    rpc GetEmail(GetEmailRequest) returns (Email){
+        option (google.api.http) = {
+            get : "/userservice/v1/{name=users/*}"
+        };
+        option (google.api.method_signature)= "name";
+    }
+} 
+
+// User defines a user.
+message User {
+
+    option (google.api.resource) = {
+        type: "library.googleapis.com/User"
+        pattern: "users/{user}"
+    };
+
+    // email of the user
+    string email=1;
+    // name of the name
+    string name=2;
+    // password of the user
+    string password=3;
+    
+}
+
+// CreateUserRequest defines request to create new user.
+message CreateUserRequest{ 
+    // User message that to be created
+    User user =1 [(google.api.field_behavior)=REQUIRED];
+}
+
+// CreateUserRequest defines response when user is created.
+message CreateUserResponse{
+    
+    // user retured after creation.
+   User user=1;
+   // id of the created user
+   string user_id=2;
+}
+
+// ValidateUserRequest is request message for used validation
+message ValidateUserRequest{
+    // email of the user.
+    string email=1 [(google.api.field_behavior)=REQUIRED];
+
+    //password of the user.
+    string password=2 [(google.api.field_behavior)=REQUIRED];
+}
+
+// ValidateUserResponse is response message for used validation
+message ValidateUserResponse{
+    // user details
+    User user=1;
+    // user id
+    string user_id=2;
+    // token is returened if email and password is correct.
+    string token=3;
+}
+
+// GetEmailRequest is request message for get email
+message GetEmailRequest {
+
+    // The field will contain name of the resource requested, for example:
+    // "users/{user_id}".
+    string name=1 [
+        (google.api.field_behavior)=REQUIRED,
+        (google.api.resource_reference)={type:"userservice/User"}
+    ];
+}
+
+// GetEmailRequest users email for given id
+message Email {
+    // email of the user.
+    string email=1;
+}
