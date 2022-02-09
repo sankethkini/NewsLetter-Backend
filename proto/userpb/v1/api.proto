@@ -1,7 +1,7 @@
 
 syntax="proto3";
 
-package userpb.v1;
+package userpb;
 import "google/api/annotations.proto";
 import "google/api/client.proto";
 import "google/api/field_behavior.proto";
@@ -25,7 +25,7 @@ service UserService {
         option (google.api.method_signature)="user";
     }
 
-    // Validate user's email with password and return token.
+    // Validate user's email with password and returns token.
     rpc ValidateUser(ValidateUserRequest) returns (ValidateUserResponse){
         option (google.api.http) = { 
             post : "/userservice/v1/users:validateUser"
@@ -36,9 +36,9 @@ service UserService {
     // Get email of user by giving user_id.
     rpc GetEmail(GetEmailRequest) returns (Email){
         option (google.api.http) = {
-            get : "/userservice/v1/{name=users/*}"
+            get : "/userservice/v1/{id=users/*}"
         };
-        option (google.api.method_signature)= "name";
+        option (google.api.method_signature)= "id";
     }
 } 
 
@@ -86,11 +86,13 @@ message ValidateUserRequest{
 // ValidateUserResponse is response message for used validation
 message ValidateUserResponse{
     // user details
-    User user=1;
+    string email=1;
+    //name of the user
+    string name=2;
     // user id
-    string user_id=2;
+    string user_id=3;
     // token is returened if email and password is correct.
-    string token=3;
+    string token=4;
 }
 
 // GetEmailRequest is request message for get email
@@ -98,7 +100,7 @@ message GetEmailRequest {
 
     // The field will contain name of the resource requested, for example:
     // "users/{user_id}".
-    string name=1 [
+    string id=1 [
         (google.api.field_behavior)=REQUIRED,
         (google.api.resource_reference)={type:"userservice/User"}
     ];

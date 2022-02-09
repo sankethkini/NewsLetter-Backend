@@ -24,7 +24,7 @@ const _ = grpc.SupportPackageIsVersion7
 type UserServiceClient interface {
 	// Creates the new user
 	CreateUser(ctx context.Context, in *CreateUserRequest, opts ...grpc.CallOption) (*User, error)
-	// Validate user's email with password and return token.
+	// Validate user's email with password and returns token.
 	ValidateUser(ctx context.Context, in *ValidateUserRequest, opts ...grpc.CallOption) (*ValidateUserResponse, error)
 	// Get email of user by giving user_id.
 	GetEmail(ctx context.Context, in *GetEmailRequest, opts ...grpc.CallOption) (*Email, error)
@@ -40,7 +40,7 @@ func NewUserServiceClient(cc grpc.ClientConnInterface) UserServiceClient {
 
 func (c *userServiceClient) CreateUser(ctx context.Context, in *CreateUserRequest, opts ...grpc.CallOption) (*User, error) {
 	out := new(User)
-	err := c.cc.Invoke(ctx, "/userpb.UserService/CreateUser", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/userpb.v1.UserService/CreateUser", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -49,7 +49,7 @@ func (c *userServiceClient) CreateUser(ctx context.Context, in *CreateUserReques
 
 func (c *userServiceClient) ValidateUser(ctx context.Context, in *ValidateUserRequest, opts ...grpc.CallOption) (*ValidateUserResponse, error) {
 	out := new(ValidateUserResponse)
-	err := c.cc.Invoke(ctx, "/userpb.UserService/ValidateUser", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/userpb.v1.UserService/ValidateUser", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -58,7 +58,7 @@ func (c *userServiceClient) ValidateUser(ctx context.Context, in *ValidateUserRe
 
 func (c *userServiceClient) GetEmail(ctx context.Context, in *GetEmailRequest, opts ...grpc.CallOption) (*Email, error) {
 	out := new(Email)
-	err := c.cc.Invoke(ctx, "/userpb.UserService/GetEmail", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/userpb.v1.UserService/GetEmail", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -71,7 +71,7 @@ func (c *userServiceClient) GetEmail(ctx context.Context, in *GetEmailRequest, o
 type UserServiceServer interface {
 	// Creates the new user
 	CreateUser(context.Context, *CreateUserRequest) (*User, error)
-	// Validate user's email with password and return token.
+	// Validate user's email with password and returns token.
 	ValidateUser(context.Context, *ValidateUserRequest) (*ValidateUserResponse, error)
 	// Get email of user by giving user_id.
 	GetEmail(context.Context, *GetEmailRequest) (*Email, error)
@@ -114,7 +114,7 @@ func _UserService_CreateUser_Handler(srv interface{}, ctx context.Context, dec f
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/userpb.UserService/CreateUser",
+		FullMethod: "/userpb.v1.UserService/CreateUser",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(UserServiceServer).CreateUser(ctx, req.(*CreateUserRequest))
@@ -132,7 +132,7 @@ func _UserService_ValidateUser_Handler(srv interface{}, ctx context.Context, dec
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/userpb.UserService/ValidateUser",
+		FullMethod: "/userpb.v1.UserService/ValidateUser",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(UserServiceServer).ValidateUser(ctx, req.(*ValidateUserRequest))
@@ -150,7 +150,7 @@ func _UserService_GetEmail_Handler(srv interface{}, ctx context.Context, dec fun
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/userpb.UserService/GetEmail",
+		FullMethod: "/userpb.v1.UserService/GetEmail",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(UserServiceServer).GetEmail(ctx, req.(*GetEmailRequest))
@@ -162,7 +162,7 @@ func _UserService_GetEmail_Handler(srv interface{}, ctx context.Context, dec fun
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var UserService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "userpb.UserService",
+	ServiceName: "userpb.v1.UserService",
 	HandlerType: (*UserServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
