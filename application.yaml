@@ -1,0 +1,17 @@
+database:
+  user: root
+  password: 1234
+  host: localhost:3306
+  name: newdb
+  maxIdleConnections: 5
+  maxOpenConnections: 5
+  disableTLS: true
+  debug: true
+
+jwt:
+  secret: "some secret"
+  duration: 24
+
+server:
+  host: "127.0.0.1"
+  port: "9000"

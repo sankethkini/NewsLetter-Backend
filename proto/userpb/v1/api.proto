@@ -1,13 +1,13 @@
 
 syntax="proto3";
 
-package userpb;
+package userpb.v1;
 import "google/api/annotations.proto";
 import "google/api/client.proto";
 import "google/api/field_behavior.proto";
 import "google/api/resource.proto";
 
-option go_package="github.com/sankethkini/NewsLetter-Backend/proto/userpb";
+option go_package="github.com/sankethkini/NewsLetter-Backend/proto/userpb/v1";
 option java_multiple_files = true;
 option java_outer_classname = "ApiProto";
 
@@ -36,9 +36,9 @@ service UserService {
     // Get email of user by giving user_id.
     rpc GetEmail(GetEmailRequest) returns (Email){
         option (google.api.http) = {
-            get : "/userservice/v1/{id=users/*}"
+            get : "/userservice/v1/{name=users/*}"
         };
-        option (google.api.method_signature)= "id";
+        option (google.api.method_signature)= "name";
     }
 } 
 
@@ -56,22 +56,14 @@ message User {
     string name=2;
     // password of the user
     string password=3;
-    
+    // userid of the user
+    string user_id=4;
 }
 
 // CreateUserRequest defines request to create new user.
 message CreateUserRequest{ 
-    // User message that to be created
-    User user =1 [(google.api.field_behavior)=REQUIRED];
-}
-
-// CreateUserRequest defines response when user is created.
-message CreateUserResponse{
-    
-    // user retured after creation.
-   User user=1;
-   // id of the created user
-   string user_id=2;
+    // name of the user that to be created
+    User user=1 [(google.api.field_behavior)=REQUIRED];
 }
 
 // ValidateUserRequest is request message for used validation
@@ -100,7 +92,7 @@ message GetEmailRequest {
 
     // The field will contain name of the resource requested, for example:
     // "users/{user_id}".
-    string id=1 [
+    string name=1 [
         (google.api.field_behavior)=REQUIRED,
         (google.api.resource_reference)={type:"userservice/User"}
     ];

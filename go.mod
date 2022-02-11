@@ -7,18 +7,28 @@ require (
 	gorm.io/gorm v1.22.5
 )
 
+require github.com/golang-jwt/jwt v3.2.2+incompatible
+
 require (
-	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/BurntSushi/toml v0.3.1 // indirect
 	github.com/go-kit/log v0.2.0 // indirect
 	github.com/go-logfmt/logfmt v0.5.1 // indirect
 	github.com/go-sql-driver/mysql v1.6.0 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.4 // indirect
+	github.com/joho/godotenv v1.3.0 // indirect
+	github.com/kr/text v0.2.0 // indirect
+	github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e // indirect
+	go.uber.org/atomic v1.9.0 // indirect
+	go.uber.org/multierr v1.7.0 // indirect
 	golang.org/x/net v0.0.0-20211112202133-69e39bad7dc2 // indirect
 	golang.org/x/sys v0.0.0-20210917161153-d61c044b1678 // indirect
 	golang.org/x/text v0.3.7 // indirect
+	gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f // indirect
+	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
+	olympos.io/encoding/edn v0.0.0-20201019073823-d3554ca0b0a3 // indirect
 )
 
 require (
@@ -32,7 +42,11 @@ require (
 	github.com/go-kit/kit v0.12.0
 	github.com/go-ozzo/ozzo-validation v3.6.0+incompatible
 	github.com/google/go-cmp v0.5.7 // indirect
+	github.com/google/wire v0.5.0
+	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0
+	github.com/ilyakaznacheev/cleanenv v1.2.6
 	github.com/pkg/errors v0.9.1
+	go.uber.org/zap v1.21.0
 	google.golang.org/protobuf v1.27.1
 	gorm.io/driver/mysql v1.2.3
 )
