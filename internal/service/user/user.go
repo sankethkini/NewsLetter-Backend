@@ -5,7 +5,7 @@ import (
 
 	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/go-ozzo/ozzo-validation/is"
-	"github.com/sankethkini/NewsLetter-Backend/proto/userpb/v1"
+	userpb "github.com/sankethkini/NewsLetter-Backend/proto/userpb/v1"
 )
 
 type Metadata struct {
@@ -55,14 +55,16 @@ func ModelToProto(m *UserModel) userpb.User {
 		return userpb.User{}
 	}
 	return userpb.User{
-		Email:    m.Email,
-		Name:     m.Name,
-		Password: m.Password,
+		Email:  m.Email,
+		Name:   m.Name,
+		UserId: m.UserID,
 	}
 }
 
 func ProtoToModel(up *userpb.User) UserModel {
-
+	if up == nil {
+		return UserModel{}
+	}
 	return UserModel{
 		Email:    up.Email,
 		Password: up.Password,

@@ -2,23 +2,22 @@ package transport
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/sankethkini/NewsLetter-Backend/internal/service/user"
 
 	"github.com/go-kit/kit/transport/grpc"
-	grpctransport "github.com/go-kit/kit/transport/grpc"
-	"github.com/sankethkini/NewsLetter-Backend/proto/userpb/v1"
+
+	userpb "github.com/sankethkini/NewsLetter-Backend/proto/userpb/v1"
 )
 
 type UserGrpcServer struct {
 	userpb.UnimplementedUserServiceServer
-	createuser   grpctransport.Handler
-	validateuser grpctransport.Handler
-	getemail     grpctransport.Handler
+	createuser   grpc.Handler
+	validateuser grpc.Handler
+	getemail     grpc.Handler
 }
 
-func NewGrpcServer(ctx context.Context, svc user.UserService) userpb.UserServiceServer {
+func NewUserGrpcServer(ctx context.Context, svc user.UserService) userpb.UserServiceServer {
 	return &UserGrpcServer{
 		createuser: grpc.NewServer(
 			user.MakeCreateUserEndpoint(svc),
@@ -36,7 +35,6 @@ func NewGrpcServer(ctx context.Context, svc user.UserService) userpb.UserService
 			func(c context.Context, i interface{}) (request interface{}, err error) { return i, nil },
 		),
 	}
-
 }
 
 func (g *UserGrpcServer) CreateUser(ctx context.Context, req *userpb.CreateUserRequest) (*userpb.User, error) {
@@ -49,7 +47,6 @@ func (g *UserGrpcServer) CreateUser(ctx context.Context, req *userpb.CreateUserR
 
 func (g *UserGrpcServer) ValidateUser(ctx context.Context, req *userpb.ValidateUserRequest) (*userpb.ValidateUserResponse, error) {
 	_, resp, err := g.validateuser.ServeGRPC(ctx, req)
-	fmt.Println(1, req)
 	if err != nil {
 		return nil, err
 	}

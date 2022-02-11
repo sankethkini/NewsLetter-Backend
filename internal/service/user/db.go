@@ -4,20 +4,21 @@ import (
 	"context"
 
 	"github.com/pkg/errors"
-	"github.com/sankethkini/NewsLetter-Backend/pkg/database"
 	"gorm.io/gorm"
 )
 
 const (
-	errResourceCreation = "database: failed to batch create inventoryItems"
-	errSignin           = "database: failed in finding record during sign in"
-	errGetEmail         = "database: failed in get email"
-	errTableCreation    = "database: failed to create table"
+	errUserCreation    = "database: failed to create user"
+	errSignin          = "database: failed in finding record during sign in"
+	errGetEmail        = "database: failed in get email"
+	errTableCreation   = "database: failed to create table"
+	errRecordExists    = "database: same email already exists"
+	errRecordNotExists = "database: record not exists"
 )
 
 type DB interface {
 	insertUser(ctx context.Context, m *UserModel) (*UserModel, error)
-	signIn(ctx context.Context, s SignInRequest) (*UserModel, string, error)
+	validate(ctx context.Context, s SignInRequest) (*UserModel, error)
 	getEmail(ctx context.Context, g GetEmailRequest) (string, error)
 }
 
@@ -25,7 +26,10 @@ type repository struct {
 	db *gorm.DB
 }
 
-//TODO if email already exists
+func NewDB(db *gorm.DB) DB {
+	return &repository{db: db}
+}
+
 func (r repository) insertUser(ctx context.Context, m *UserModel) (*UserModel, error) {
 	err := checkForTable(r.db)
 	if err != nil {
@@ -34,40 +38,64 @@ func (r repository) insertUser(ctx context.Context, m *UserModel) (*UserModel, e
 
 	err = m.validate()
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, errUserCreation)
 	}
+
+	usr := UserModel{Email: m.Email}
+	exists, err := checkIfRecordExists(r.db, &usr)
+	if err != nil {
+		return nil, errors.Wrap(err, errGetEmail)
+	}
+
+	if exists {
+		return nil, errors.New(errRecordExists)
+	}
+
 	tx := r.db.WithContext(ctx).Create(m)
 	if tx.Error != nil {
-		return nil, errors.Wrap(tx.Error, errResourceCreation)
+		return nil, errors.Wrap(tx.Error, errUserCreation)
 	}
+
 	var ret UserModel
 	tx = r.db.Find(&ret)
+	if tx.Error != nil {
+		return nil, errors.Wrap(tx.Error, errUserCreation)
+	}
 
 	return &ret, nil
 }
 
-func (r repository) signIn(ctx context.Context, s SignInRequest) (*UserModel, string, error) {
+func (r repository) validate(ctx context.Context, s SignInRequest) (*UserModel, error) {
 	err := checkForTable(r.db)
 	if err != nil {
-		return nil, "", errors.Wrap(err, errTableCreation)
+		return nil, errors.Wrap(err, errTableCreation)
 	}
 
 	err = s.validate()
 	if err != nil {
-		return nil, "", errors.Wrap(err, errSignin)
+		return nil, err
+	}
+
+	usr := UserModel{Email: s.Email}
+	exists, err := checkIfRecordExists(r.db, &usr)
+	if err != nil {
+		return nil, errors.Wrap(err, errGetEmail)
+	}
+
+	if !exists {
+		return nil, errors.New(errRecordNotExists)
 	}
 
 	var record *UserModel
-	tx := r.db.WithContext(ctx).Where("email = ?", s.Email).Find(&record)
-	if tx.Error != nil {
-		return nil, "", errors.Wrap(tx.Error, errSignin)
+	err = r.db.WithContext(ctx).Where("email = ?", s.Email).Limit(1).Find(&record).Error
+	if err != nil {
+		return nil, errors.Wrap(err, errSignin)
 	}
 
-	return record, record.UserID, nil
+	return record, nil
 }
 
 func (r repository) getEmail(ctx context.Context, g GetEmailRequest) (string, error) {
-
 	err := checkForTable(r.db)
 	if err != nil {
 		return "", errors.Wrap(err, errTableCreation)
@@ -75,13 +103,25 @@ func (r repository) getEmail(ctx context.Context, g GetEmailRequest) (string, er
 
 	err = g.validate()
 	if err != nil {
-		return "", errors.Wrap(err, errSignin)
+		return "", err
 	}
+
+	usr := UserModel{UserID: g.ID}
+	exists, err := checkIfRecordExists(r.db, &usr)
+	if err != nil {
+		return "", errors.Wrap(err, errGetEmail)
+	}
+
+	if !exists {
+		return "", errors.New(errRecordNotExists)
+	}
+
 	var record *UserModel
-	tx := r.db.WithContext(ctx).Where("user_id = ?", g.ID).Find(&record)
-	if tx.Error != nil {
-		return "", errors.Wrap(tx.Error, errGetEmail)
+	err = r.db.WithContext(ctx).Where("user_id = ?", g.ID).Find(&record).Error
+	if err != nil {
+		return "", errors.Wrap(err, errGetEmail)
 	}
+
 	return record.Email, nil
 }
 
@@ -93,11 +133,12 @@ func checkForTable(db *gorm.DB) error {
 	return nil
 }
 
-func NewDB() DB {
-	//wire
-	op, err := database.Open()
+func checkIfRecordExists(db *gorm.DB, usr *UserModel) (bool, error) {
+	// check if exists.
+	count := int64(0)
+	err := db.Model(&UserModel{}).Where(usr).Count(&count).Error
 	if err != nil {
-		panic(err)
+		return false, err
 	}
-	return &repository{db: op}
+	return count != 0, nil
 }

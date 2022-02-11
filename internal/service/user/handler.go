@@ -2,10 +2,9 @@ package user
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/go-kit/kit/endpoint"
-	"github.com/sankethkini/NewsLetter-Backend/proto/userpb/v1"
+	userpb "github.com/sankethkini/NewsLetter-Backend/proto/userpb/v1"
 )
 
 type Endpoints struct {
@@ -55,12 +54,11 @@ func MakeCreateUserEndpoint(svc UserService) endpoint.Endpoint {
 func MakeValidateUserEndPoint(svc UserService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		req := request.(*userpb.ValidateUserRequest)
-		fmt.Println(2, req)
-		pass, err := svc.ValidateUser(ctx, req)
+		resp, err := svc.ValidateUser(ctx, req)
 		if err != nil {
 			return nil, err
 		}
-		return pass, nil
+		return resp, nil
 	}
 }
 
