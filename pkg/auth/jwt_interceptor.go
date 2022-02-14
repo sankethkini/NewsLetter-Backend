@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"fmt"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -9,6 +10,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+// nolint:revive
 type AuthInterceptor struct {
 	jwtManager      *JWTManager
 	accessibleRoles map[string][]string
@@ -24,7 +26,8 @@ func (interceptor *AuthInterceptor) Unary() grpc.UnaryServerInterceptor {
 		req interface{},
 		info *grpc.UnaryServerInfo,
 		handler grpc.UnaryHandler,
-	) (interface{}, error) {
+	) (interface{}, error,
+	) {
 		err := interceptor.authorize(ctx, info.FullMethod)
 		if err != nil {
 			return nil, err
@@ -35,6 +38,7 @@ func (interceptor *AuthInterceptor) Unary() grpc.UnaryServerInterceptor {
 }
 
 func (interceptor *AuthInterceptor) authorize(ctx context.Context, method string) error {
+	fmt.Println(method)
 	accessibleRoles, ok := interceptor.accessibleRoles[method]
 	if !ok {
 		// everyone can access

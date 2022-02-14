@@ -5,8 +5,13 @@ import (
 
 	"github.com/golang-jwt/jwt"
 	"github.com/pkg/errors"
-	"github.com/sankethkini/NewsLetter-Backend/internal/config"
+	"github.com/sankethkini/NewsLetter-Backend/pkg/role"
 )
+
+type JWTConfig struct {
+	Secret   string `yaml:"secret"`
+	Duration int    `yaml:"duration"`
+}
 
 type JWTManager struct {
 	secretKey     string
@@ -19,20 +24,20 @@ type UserClaims struct {
 	Role  string
 }
 
-func NewJWTManager(cfg config.JWTConfig) *JWTManager {
+func NewJWTManager(cfg JWTConfig) *JWTManager {
 	return &JWTManager{
 		secretKey:     cfg.Secret,
 		tokenDuration: time.Hour * time.Duration(cfg.Duration),
 	}
 }
 
-func (manager *JWTManager) Generator(email string, role string) (string, error) {
+func (manager *JWTManager) Generator(email string, role role.Access) (string, error) {
 	claims := UserClaims{
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: time.Now().Add(manager.tokenDuration).Unix(),
 		},
 		Email: email,
-		Role:  role,
+		Role:  role.String(),
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString([]byte(manager.secretKey))

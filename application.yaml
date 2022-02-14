@@ -15,3 +15,25 @@ jwt:
 server:
   host: "127.0.0.1"
   port: "9000"
+
+redis:
+  host: "127.0.0.1:6379"
+  db: 10
+  password: ""
+  expire: 100
+
+kafkac:
+  topic: "my-kafka-topic"
+  groupID: "g1"
+  brokers: ["localhost:9093"]
+
+kafkap:
+  topic: "my-kafka-topic"
+  brokers: ["localhost:9093"]
+
+email:
+  from: "addemail@gmail.com"
+  password: "add password"
+  host: "smtp.gmail.com"
+  port: "587"
+  server: "localhost:9000"
