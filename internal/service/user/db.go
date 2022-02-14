@@ -42,7 +42,7 @@ func (r repository) insertUser(ctx context.Context, m *UserModel) (*UserModel, e
 	}
 
 	usr := UserModel{Email: m.Email}
-	exists, err := checkIfRecordExists(r.db, &usr)
+	exists, err := CheckIfRecordExists(r.db, &usr)
 	if err != nil {
 		return nil, errors.Wrap(err, errGetEmail)
 	}
@@ -57,6 +57,7 @@ func (r repository) insertUser(ctx context.Context, m *UserModel) (*UserModel, e
 	}
 
 	var ret UserModel
+	ret.UserID = m.UserID
 	tx = r.db.Find(&ret)
 	if tx.Error != nil {
 		return nil, errors.Wrap(tx.Error, errUserCreation)
@@ -77,7 +78,7 @@ func (r repository) validate(ctx context.Context, s SignInRequest) (*UserModel, 
 	}
 
 	usr := UserModel{Email: s.Email}
-	exists, err := checkIfRecordExists(r.db, &usr)
+	exists, err := CheckIfRecordExists(r.db, &usr)
 	if err != nil {
 		return nil, errors.Wrap(err, errGetEmail)
 	}
@@ -107,7 +108,7 @@ func (r repository) getEmail(ctx context.Context, g GetEmailRequest) (string, er
 	}
 
 	usr := UserModel{UserID: g.ID}
-	exists, err := checkIfRecordExists(r.db, &usr)
+	exists, err := CheckIfRecordExists(r.db, &usr)
 	if err != nil {
 		return "", errors.Wrap(err, errGetEmail)
 	}
@@ -133,7 +134,7 @@ func checkForTable(db *gorm.DB) error {
 	return nil
 }
 
-func checkIfRecordExists(db *gorm.DB, usr *UserModel) (bool, error) {
+func CheckIfRecordExists(db *gorm.DB, usr *UserModel) (bool, error) {
 	// check if exists.
 	count := int64(0)
 	err := db.Model(&UserModel{}).Where(usr).Count(&count).Error

@@ -16,6 +16,7 @@ type Metadata struct {
 	Active     bool      `gorm:"column:active;type:tinyint;default:1;"`
 }
 
+// nolint: revive
 type UserModel struct {
 	Metadata Metadata `gorm:"embedded"`
 	UserID   string   `gorm:"column:user_id;primary_key;type:VARCHAR(100)"`

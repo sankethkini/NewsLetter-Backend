@@ -40,7 +40,7 @@ func (e Endpoints) GetEmail(ctx context.Context, req *userpb.GetEmailRequest) (*
 	return resp, nil
 }
 
-func MakeCreateUserEndpoint(svc UserService) endpoint.Endpoint {
+func MakeCreateUserEndpoint(svc Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		req := request.(*userpb.CreateUserRequest)
 		usr, err := svc.CreateUser(ctx, req)
@@ -51,7 +51,7 @@ func MakeCreateUserEndpoint(svc UserService) endpoint.Endpoint {
 	}
 }
 
-func MakeValidateUserEndPoint(svc UserService) endpoint.Endpoint {
+func MakeValidateUserEndPoint(svc Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		req := request.(*userpb.ValidateUserRequest)
 		resp, err := svc.ValidateUser(ctx, req)
@@ -62,7 +62,7 @@ func MakeValidateUserEndPoint(svc UserService) endpoint.Endpoint {
 	}
 }
 
-func MakeGetEmailEndPoint(svc UserService) endpoint.Endpoint {
+func MakeGetEmailEndPoint(svc Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		req := request.(*userpb.GetEmailRequest)
 		email, err := svc.GetEmail(ctx, req)
