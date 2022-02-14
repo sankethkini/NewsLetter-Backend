@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package adminpb.v1;
+
+option go_package="github.com/sankethkini/NewsLetter-Backend/proto/adminpb/v1";
+option java_multiple_files = true;
+option java_outer_classname = "ApiProto";
+
+option java_package = "com.adminpb.v1";
+
+service AdminService{
+    rpc SignIn(SignInRequest) returns (SignInResponse){}
+}
+
+message SignInRequest{
+    string email=1;
+    string password=2;
+}
+
+message SignInResponse{
+    string admin_id=1;
+    string token=2;
+}
