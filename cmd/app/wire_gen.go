@@ -9,9 +9,17 @@ package app
 import (
 	"github.com/google/wire"
 	"github.com/sankethkini/NewsLetter-Backend/internal/config"
+	"github.com/sankethkini/NewsLetter-Backend/internal/kproducer"
+	"github.com/sankethkini/NewsLetter-Backend/internal/service"
+	"github.com/sankethkini/NewsLetter-Backend/internal/service/admin"
+	"github.com/sankethkini/NewsLetter-Backend/internal/service/news_letter"
+	"github.com/sankethkini/NewsLetter-Backend/internal/service/subscription"
 	"github.com/sankethkini/NewsLetter-Backend/internal/service/user"
 	"github.com/sankethkini/NewsLetter-Backend/pkg/auth"
+	"github.com/sankethkini/NewsLetter-Backend/pkg/cache"
 	"github.com/sankethkini/NewsLetter-Backend/pkg/database"
+	"github.com/sankethkini/NewsLetter-Backend/pkg/email"
+	"github.com/sankethkini/NewsLetter-Backend/pkg/kafka"
 )
 
 // Injectors from wire.go:
@@ -37,21 +45,45 @@ func IntializeJWT() (*auth.AuthInterceptor, error) {
 	return authInterceptor, nil
 }
 
-func IntializeUserRepo() (*user.UserServiceImpl, func(), error) {
+func IntializeConsumer() (*kafkaservice.Consumer, error) {
+	appConfig, err := config.LoadConfig()
+	if err != nil {
+		return nil, err
+	}
+	consumerConfig := config.LoadKafkaConsumer(appConfig)
+	emailConfig := config.LoadEmailConfig(appConfig)
+	emailEmail := email.NewEmailServer(emailConfig)
+	consumer := kafkaservice.NewConsumer(consumerConfig, emailEmail)
+	return consumer, nil
+}
+
+func IntializeServiceRegistry() (*service.Registry, func(), error) {
 	appConfig, err := config.LoadConfig()
 	if err != nil {
 		return nil, nil, err
 	}
-	configDatabase := config.LoadDataBaseConfig(appConfig)
-	db, cleanup, err := database.Open(configDatabase)
+	databaseDatabase := config.LoadDataBaseConfig(appConfig)
+	db, cleanup, err := database.Open(databaseDatabase)
 	if err != nil {
 		return nil, nil, err
 	}
 	userDB := user.NewDB(db)
 	jwtConfig := config.LoadJWTConfig(appConfig)
 	jwtManager := auth.NewJWTManager(jwtConfig)
-	userServiceImpl := user.NewUserService(userDB, jwtManager)
-	return userServiceImpl, func() {
+	userService := user.NewUserService(userDB, jwtManager)
+	subscriptionDB := subscription.NewSubRepo(db)
+	redisConfig := config.LoadRedisConfig(appConfig)
+	cacheService := cache.NewRedisCache(redisConfig)
+	subscriptionService := subscription.NewSubService(subscriptionDB, cacheService)
+	adminDB := admin.NewRepo(db)
+	adminService := admin.NewAdminService(adminDB, jwtManager)
+	newsletterDB := newsletter.NewNewsRepo(db)
+	kafkaConfig := config.LoadKafkaConfig(appConfig)
+	writer := kafkaservice.NewProducer(kafkaConfig)
+	producer := kproducer.NewProducer(writer)
+	newsletterService := newsletter.NewNewsService(newsletterDB, producer)
+	registry := service.NewRegistry(userService, subscriptionService, adminService, newsletterService)
+	return registry, func() {
 		cleanup()
 	}, nil
 }
