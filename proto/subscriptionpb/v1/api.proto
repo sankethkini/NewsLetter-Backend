@@ -1,0 +1,139 @@
+syntax = "proto3";
+
+package subscriptionpb.v1;
+import "google/api/annotations.proto";
+import "google/api/client.proto";
+import "google/api/field_behavior.proto";
+import "google/api/resource.proto";
+
+option go_package="github.com/sankethkini/NewsLetter-Backend/proto/subscriptionpb/v1";
+option java_multiple_files = true;
+option java_outer_classname = "ApiProto";
+
+option java_package = "com.subscriptionpb.v1";
+
+//Defines all the related service regarding user and subscription
+service SubscriptionService{
+
+    // add user to subscription.
+    rpc AddUser(AddUserRequest) returns (AddUserResponse) {}
+
+    // removes a user from a subscription.
+    rpc RemoveUser(RemoveUserRequest) returns (RemoveUserResponse) {}
+    // creates a new scheme.
+    rpc CreateScheme(CreateSchemeRequest) returns (Scheme){}
+
+    // renewes a subscription.
+    rpc Renew (RenewRequest) returns (RenewResponse){}
+
+    // search for particular scheme.
+    rpc Search(SearchRequest) returns (SearchResponse){}
+
+    // sort scheme.
+    rpc Sort(SortRequest) returns (SortResponse){}
+
+    // filter scheme.
+    rpc Filter(FilterRequest) returns (FilterResponse){}
+    rpc GetUsers(GetUsersRequest) returns (GetUsersResponse){}
+}
+
+// AddUserRequest request for add user.
+message AddUserRequest{
+
+    // user id of user
+    string user_id=1 [(google.api.field_behavior)=REQUIRED];
+    // scheme id of scheme
+    string scheme_id=2 [(google.api.field_behavior)=REQUIRED];
+}
+
+// Scheme represents a scheme object
+message Scheme{
+    //scheme id of scheme
+    string scheme_id=1 [(google.api.field_behavior)=REQUIRED];
+    // name of the scheme
+    string name=2 [(google.api.field_behavior)=REQUIRED];
+    // price of the scheme
+    float price=3 [(google.api.field_behavior)=REQUIRED];
+    //validity in days
+    int32 days=4 [(google.api.field_behavior)=REQUIRED];
+}
+
+// UserSubscription represents a user and subscription
+message UserSubscription{
+    // scheme id of the scheme
+    string scheme_id=1 [(google.api.field_behavior)=REQUIRED];
+    // total validity
+    string validity=2 [(google.api.field_behavior)=REQUIRED];
+}
+
+message AddUserResponse{
+    // subs is list of all subscription
+    repeated UserSubscription subs=1 [(google.api.field_behavior)=REQUIRED];
+}
+
+message RemoveUserRequest{
+    // user id of user
+    string user_id=1 [(google.api.field_behavior)=REQUIRED];
+    // scheme id of scheme
+    string scheme_id=2 [(google.api.field_behavior)=REQUIRED];
+}
+
+message RemoveUserResponse{
+    // subs is list of all subscription
+    repeated UserSubscription subs=1  [(google.api.field_behavior)=REQUIRED];
+}
+
+message CreateSchemeRequest{
+    // name of the scheme
+    string name=1 [(google.api.field_behavior)=REQUIRED];
+    float price=2 [(google.api.field_behavior)=REQUIRED];
+    int64 days=3 [(google.api.field_behavior)=REQUIRED];
+}
+
+message RenewRequest{
+    string scheme_id=1 [(google.api.field_behavior)=REQUIRED];
+    string user_id=2 [(google.api.field_behavior)=REQUIRED];
+}
+
+message RenewResponse{
+    UserSubscription sub=1 [(google.api.field_behavior)=REQUIRED];
+}
+
+message SearchRequest{
+    string text=1 [(google.api.field_behavior)=REQUIRED];
+}
+
+message SearchResponse{
+    repeated Scheme subs=1 [(google.api.field_behavior)=REQUIRED];
+}
+
+enum Field{
+    PRICE =0;
+    DAYS =1;    
+}
+
+message SortRequest{
+    Field field=1 [(google.api.field_behavior)=REQUIRED];
+}
+
+message SortResponse{
+    repeated Scheme subs=1[(google.api.field_behavior)=REQUIRED];
+}
+
+message FilterRequest{
+    Field field=1 [(google.api.field_behavior)=REQUIRED];
+    float min=2 [(google.api.field_behavior)=REQUIRED];
+    float max=3 [(google.api.field_behavior)=REQUIRED];
+}
+
+message FilterResponse{
+    repeated Scheme subs=1 [(google.api.field_behavior)=REQUIRED];
+}
+
+message GetUsersRequest{
+    string scheme_id=1;
+}
+
+message GetUsersResponse{
+    repeated string user_ids=1;
+}
