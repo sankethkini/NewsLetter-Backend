@@ -19,7 +19,7 @@ type Metadata struct {
 // nolint: revive
 type UserModel struct {
 	Metadata Metadata `gorm:"embedded"`
-	UserID   string   `gorm:"column:user_id;primary_key;type:VARCHAR(100)"`
+	UserID   string   `gorm:"column:id;primary_key;type:VARCHAR(100)"`
 	RecordID int64    `gorm:"column:record_id;AUTOINCREMENT;type:BIGINT"`
 	Name     string   `gorm:"column:name;type:CHAR(100)"`
 	Email    string   `gorm:"column:email;type:CHAR(100);UNIQUE;NOT NULL"`

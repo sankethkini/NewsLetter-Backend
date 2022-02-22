@@ -18,7 +18,7 @@ type Metadata struct {
 // nolint:revive
 type AdminModel struct {
 	Metadata Metadata `gorm:"embedded"`
-	AdminID  string   `gorm:"column:admin_id;primary_key;type:VARCHAR(100)"`
+	AdminID  string   `gorm:"column:id;primary_key;type:VARCHAR(100)"`
 	RecordID int64    `gorm:"column:record_id;AUTOINCREMENT;type:BIGINT"`
 	Email    string   `gorm:"column:email;type:CHAR(100);UNIQUE;NOT NULL"`
 	Password string   `gorm:"column:password;type:VARCHAR(100)"`

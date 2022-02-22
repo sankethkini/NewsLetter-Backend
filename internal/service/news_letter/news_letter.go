@@ -25,7 +25,7 @@ type Metadata struct {
 // nolint:revive
 type NewsLetterModel struct {
 	Metadata     Metadata `gorm:"embedded"`
-	NewsLetterID string   `gorm:"column:news_letter_id;primary_key;type:VARCHAR(100)"`
+	NewsLetterID string   `gorm:"column:id;primary_key;type:VARCHAR(100)"`
 	RecordID     int64    `gorm:"column:record_id;AUTOINCREMENT;type:BIGINT"`
 	Title        string   `gorm:"column:title;type:TEXT"`
 	Body         string   `gorm:"column:body;type:TEXT"`

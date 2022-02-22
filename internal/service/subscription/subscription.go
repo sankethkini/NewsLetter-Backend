@@ -4,14 +4,8 @@ import (
 	"time"
 
 	validation "github.com/go-ozzo/ozzo-validation"
+	"github.com/sankethkini/NewsLetter-Backend/internal/enum"
 	subscriptionpb "github.com/sankethkini/NewsLetter-Backend/proto/subscriptionpb/v1"
-)
-
-type Field int
-
-const (
-	PRICE Field = iota
-	DAYS
 )
 
 type Metadata struct {
@@ -25,7 +19,7 @@ type Metadata struct {
 // nolint:revive
 type SubscriptionModel struct {
 	Metadata Metadata `gorm:"embedded"`
-	SchemeID string   `gorm:"column:SchemeID;primary_key;type:VARCHAR(100)"`
+	SchemeID string   `gorm:"column:id;primary_key;type:VARCHAR(100)"`
 	RecordID int64    `gorm:"column:record_id;AUTOINCREMENT;type:BIGINT"`
 	Name     string   `gorm:"column:name;type:CHAR(100)"`
 	Price    float64  `gorm:"column:price;type:FLOAT"`
@@ -59,7 +53,7 @@ type RenewResponse struct {
 }
 
 type FilterRequest struct {
-	field Field
+	field enum.Field
 	min   float32
 	max   float32
 }
