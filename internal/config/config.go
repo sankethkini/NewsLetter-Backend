@@ -4,24 +4,13 @@ import (
 	"fmt"
 
 	"github.com/ilyakaznacheev/cleanenv"
+	"github.com/sankethkini/NewsLetter-Backend/internal/enum"
 	"github.com/sankethkini/NewsLetter-Backend/pkg/auth"
 	"github.com/sankethkini/NewsLetter-Backend/pkg/cache"
 	"github.com/sankethkini/NewsLetter-Backend/pkg/database"
 	"github.com/sankethkini/NewsLetter-Backend/pkg/email"
 	kafkaservice "github.com/sankethkini/NewsLetter-Backend/pkg/kafka"
-	"github.com/sankethkini/NewsLetter-Backend/pkg/role"
 )
-
-type Role int
-
-const (
-	ADMIN Role = iota
-	USER
-)
-
-func (r Role) String() string {
-	return []string{"admin", "user"}[r]
-}
 
 type ServerConfig struct {
 	Host string `yaml:"host"`
@@ -83,12 +72,12 @@ func LoadAccessibleRoles() map[string][]string {
 	return map[string][]string{
 		// this will be done when needed and it will be like below.
 
-		newsPath + "CreateNewsLetter": {role.ADMIN.String()},
-		newsPath + "AddSchemeToNews":  {role.ADMIN.String()},
-		subsPath + "CreateScheme":     {role.ADMIN.String()},
+		newsPath + "CreateNewsLetter": {enum.ADMIN.String()},
+		newsPath + "AddSchemeToNews":  {enum.ADMIN.String()},
+		subsPath + "CreateScheme":     {enum.ADMIN.String()},
 
-		subsPath + "AddUser":    {role.USER.String()},
-		subsPath + "RemoveUser": {role.USER.String()},
-		subsPath + "Renew":      {role.USER.String()},
+		subsPath + "AddUser":    {enum.USER.String()},
+		subsPath + "RemoveUser": {enum.USER.String()},
+		subsPath + "Renew":      {enum.USER.String()},
 	}
 }
