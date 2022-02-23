@@ -5,9 +5,9 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
+	"github.com/sankethkini/NewsLetter-Backend/internal/enum"
 	"github.com/sankethkini/NewsLetter-Backend/pkg/auth"
 	"github.com/sankethkini/NewsLetter-Backend/pkg/encryption"
-	"github.com/sankethkini/NewsLetter-Backend/pkg/role"
 	userpb "github.com/sankethkini/NewsLetter-Backend/proto/userpb/v1"
 )
 
@@ -38,6 +38,10 @@ func (u *service) CreateUser(ctx context.Context, usr *userpb.CreateUserRequest)
 	m := ProtoToModel(usr.User)
 	m.UserID = uuid.NewString()
 	m.Password = encryption.Encrypt(m.Password)
+	if err := m.validate(); err != nil {
+		return nil, err
+	}
+
 	ret, err := u.repo.insertUser(ctx, &m)
 	if err != nil {
 		return nil, err
@@ -48,14 +52,19 @@ func (u *service) CreateUser(ctx context.Context, usr *userpb.CreateUserRequest)
 }
 
 func (u *service) ValidateUser(ctx context.Context, sgn *userpb.ValidateUserRequest) (*userpb.ValidateUserResponse, error) {
-	b, err := u.repo.validate(ctx, SignInRequest{Email: sgn.Email, Password: sgn.Password})
+	dbreq := SignInRequest{Email: sgn.Email, Password: sgn.Password}
+	if err := dbreq.validate(); err != nil {
+		return nil, err
+	}
+
+	b, err := u.repo.getUser(ctx, dbreq)
 	if err != nil {
 		return nil, err
 	}
 
 	val := encryption.Compare(sgn.Password, []byte(b.Password))
 	if val {
-		token, err := u.jwtManager.Generator(b.Email, role.USER)
+		token, err := u.jwtManager.Generator(b.Email, enum.USER)
 		if err != nil {
 			return nil, err
 		}
@@ -66,7 +75,12 @@ func (u *service) ValidateUser(ctx context.Context, sgn *userpb.ValidateUserRequ
 }
 
 func (u *service) GetEmail(ctx context.Context, usrID *userpb.GetEmailRequest) (*userpb.Email, error) {
-	email, err := u.repo.getEmail(ctx, GetEmailRequest{ID: usrID.Name})
+	dbreq := GetEmailRequest{ID: usrID.Name}
+	if err := dbreq.validate(); err != nil {
+		return nil, err
+	}
+
+	email, err := u.repo.getEmail(ctx, dbreq)
 	if err != nil {
 		return nil, err
 	}

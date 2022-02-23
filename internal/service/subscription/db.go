@@ -4,20 +4,23 @@ import (
 	"context"
 	"time"
 
-	"github.com/google/uuid"
-	"github.com/sankethkini/NewsLetter-Backend/internal/service/user"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 	"gorm.io/gorm"
 )
 
+const (
+	errDuplicateRecord  = "record already exists"
+	errResourceNotFound = "resource not found"
+)
+
 type DB interface {
-	addUser(context.Context, UserSchemeRequest) ([]UserSubscription, error)
+	addUser(context.Context, AddUserRequest) ([]UserSubscription, error)
 	removeUser(context.Context, UserSchemeRequest) ([]UserSubscription, error)
-	createScheme(context.Context, SchemeRequest) (*SubscriptionModel, error)
-	renew(context.Context, UserSchemeRequest) (*UserSubscription, error)
-	search(context.Context, string) ([]SubscriptionModel, error)
-	sort(context.Context, Field) ([]SubscriptionModel, error)
+	createScheme(context.Context, *SubscriptionModel) (*SubscriptionModel, error)
+	getUserScheme(context.Context, UserSchemeRequest) (*UserSubscription, error)
+	getSubscription(context.Context, string) (*SubscriptionModel, error)
+	renew(context.Context, UserSchemeRequest, time.Time) (*UserSubscription, error)
+	search(context.Context, SearchRequest) ([]SubscriptionModel, error)
+	sort(context.Context, string) ([]SubscriptionModel, error)
 	filter(context.Context, FilterRequest) ([]SubscriptionModel, error)
 	getUsers(context.Context, string) ([]string, error)
 }
@@ -32,27 +35,12 @@ func NewSubRepo(db *gorm.DB) DB {
 	}
 }
 
-func (r repository) addUser(ctx context.Context, req UserSchemeRequest) ([]UserSubscription, error) {
-	err := checkForTable(r.db)
-	if err != nil {
-		return nil, err
-	}
-
-	// check if such scheme exists.
-	err = CheckIfSubsExists(ctx, r.db, req.UserID, req.SchemeID)
-	if err != nil {
-		return nil, status.Errorf(codes.NotFound, "record not found")
-	}
-
-	ok, err := CheckForScheme(ctx, r.db, req.UserID, req.SchemeID)
-	if err != nil || ok {
-		return nil, status.Errorf(codes.AlreadyExists, "scheme already subscribed")
-	}
+func (r repository) addUser(ctx context.Context, req AddUserRequest) ([]UserSubscription, error) {
 
 	var us UserSubscription
 	us.UserID = req.UserID
 	us.SchemeID = req.SchemeID
-	us.Validity = time.Now()
+	us.Validity = req.Validity
 
 	tx := r.db.WithContext(ctx).Create(&us)
 
@@ -68,33 +56,8 @@ func (r repository) addUser(ctx context.Context, req UserSchemeRequest) ([]UserS
 }
 
 func (r repository) removeUser(ctx context.Context, req UserSchemeRequest) ([]UserSubscription, error) {
-	err := checkForTable(r.db)
-	if err != nil {
-		return nil, err
-	}
 
-	err = req.validate()
-	if err != nil {
-		return nil, err
-	}
-
-	// check if such scheme exists.
-	err = CheckIfSubsExists(ctx, r.db, req.UserID, req.SchemeID)
-	if err != nil {
-		return nil, err
-	}
-
-	ok, err := CheckForScheme(ctx, r.db, req.UserID, req.SchemeID)
-	if err != nil {
-		return nil, err
-	}
-	if !ok {
-		return nil, status.Errorf(codes.NotFound, "record not found")
-	}
-
-	var us UserSubscription
-	us.SchemeID = req.SchemeID
-	us.UserID = req.UserID
+	us := UserSubscription{SchemeID: req.SchemeID, UserID: req.UserID}
 	tx := r.db.Delete(&us)
 	if tx.Error != nil {
 		return nil, tx.Error
@@ -107,56 +70,29 @@ func (r repository) removeUser(ctx context.Context, req UserSchemeRequest) ([]Us
 	return ret, nil
 }
 
-func (r repository) renew(ctx context.Context, req UserSchemeRequest) (*UserSubscription, error) {
-	err := checkForTable(r.db)
-	if err != nil {
-		return nil, err
-	}
-
-	err = req.validate()
-	if err != nil {
-		return nil, err
-	}
-
-	// check if such scheme exists.
-	err = CheckIfSubsExists(ctx, r.db, req.UserID, req.SchemeID)
-	if err != nil {
-		return nil, err
-	}
-
-	ok, err := CheckForScheme(ctx, r.db, req.UserID, req.SchemeID)
-	if err != nil {
-		return nil, err
-	}
-	if !ok {
-		return nil, status.Errorf(codes.NotFound, "record not found")
-	}
-
-	var us UserSubscription
-	us.SchemeID = req.SchemeID
-	us.UserID = req.UserID
-	tx := r.db.WithContext(ctx).Find(&us)
+func (r repository) getUserScheme(ctx context.Context, req UserSchemeRequest) (*UserSubscription, error) {
+	mod := UserSubscription{UserID: req.UserID, SchemeID: req.SchemeID}
+	var resp UserSubscription
+	tx := r.db.WithContext(ctx).Model(UserSubscription{}).Where(&mod).Take(&resp)
 	if tx.Error != nil {
 		return nil, tx.Error
 	}
-	var sch SubscriptionModel
-	sch.SchemeID = req.SchemeID
-	tx = r.db.WithContext(ctx).Find(&sch)
+	return &resp, nil
+}
 
+func (r repository) getSubscription(ctx context.Context, id string) (*SubscriptionModel, error) {
+	var resp SubscriptionModel
+	tx := r.db.WithContext(ctx).Model(&SubscriptionModel{}).Where(SubscriptionModel{SchemeID: id}).Take(&resp)
 	if tx.Error != nil {
 		return nil, tx.Error
 	}
+	return &resp, nil
+}
 
-	usrTime := us.Validity
-	curTime := time.Now()
-	if usrTime.Sub(curTime) <= 0 {
-		us.Validity = time.Now().AddDate(0, 0, sch.Days)
-	} else {
-		us.Validity = usrTime.AddDate(0, 0, sch.Days)
-	}
+func (r repository) renew(ctx context.Context, req UserSchemeRequest, val time.Time) (*UserSubscription, error) {
 
 	us1 := UserSubscription{SchemeID: req.SchemeID, UserID: req.UserID}
-	tx = r.db.WithContext(ctx).Model(&us1).Update("validity", us.Validity)
+	tx := r.db.WithContext(ctx).Model(&us1).Update("validity", val)
 	if tx.Error != nil {
 		return nil, tx.Error
 	}
@@ -168,27 +104,14 @@ func (r repository) renew(ctx context.Context, req UserSchemeRequest) (*UserSubs
 	return &us1, nil
 }
 
-func (r repository) createScheme(ctx context.Context, s SchemeRequest) (*SubscriptionModel, error) {
-	err := s.validate()
-	if err != nil {
-		return nil, err
-	}
+func (r repository) createScheme(ctx context.Context, req *SubscriptionModel) (*SubscriptionModel, error) {
 
-	var sc SubscriptionModel
-	sc.Name = s.name
-	sc.Days = s.days
-	sc.Price = s.price
-	id := uuid.NewString()
-	sc.SchemeID = id
-
-	tx := r.db.Create(&sc)
+	tx := r.db.Create(&req)
 	if tx.Error != nil {
 		return nil, tx.Error
 	}
-
 	var ret SubscriptionModel
-	ret.SchemeID = id
-	tx = r.db.Find(&ret)
+	tx = r.db.WithContext(ctx).Model(&SubscriptionModel{}).Where(&SubscriptionModel{SchemeID: req.SchemeID}).Take(&ret)
 
 	if tx.Error != nil {
 		return nil, tx.Error
@@ -198,105 +121,26 @@ func (r repository) createScheme(ctx context.Context, s SchemeRequest) (*Subscri
 
 // nolint: gocritic
 func (r repository) getSchemesOfUser(ctx context.Context, UserID string) ([]UserSubscription, error) {
-	exi, err := user.CheckIfRecordExists(r.db, &user.UserModel{UserID: UserID})
-	if err != nil {
-		return nil, err
-	}
-	if !exi {
-		return nil, status.Errorf(codes.NotFound, "database: record with given id not found")
-	}
 
 	var subs []UserSubscription
 	var schemeIDs []string
 	tx := r.db.WithContext(ctx).Model(&UserSubscription{UserID: UserID}).Find(&subs)
 
 	if tx.Error != nil {
-		return nil, err
+		return nil, tx.Error
 	}
 
 	tx = r.db.WithContext(ctx).Find(&subs, schemeIDs)
 	if tx.Error != nil {
-		return nil, err
+		return nil, tx.Error
 	}
 	return subs, nil
 }
 
-func checkForTable(db *gorm.DB) error {
-	if !db.Migrator().HasTable(&user.UserModel{}) {
-		err := db.Migrator().AutoMigrate(&user.UserModel{})
-		return err
-	}
-	if !db.Migrator().HasTable(&SubscriptionModel{}) {
-		err := db.Migrator().AutoMigrate(&SubscriptionModel{})
-		return err
-	}
-	if !db.Migrator().HasTable(&UserSubscription{}) {
-		err := db.Migrator().AutoMigrate(&UserSchemeRequest{})
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func CheckIfRecordExists(ctx context.Context, db *gorm.DB, usr *SubscriptionModel) (bool, error) {
-	// check if exists.
-	count := int64(0)
-	err := db.WithContext(ctx).Model(&SubscriptionModel{}).Where(usr).Count(&count).Error
-	if err != nil {
-		return false, err
-	}
-	return count != 0, nil
-}
-
-// nolint: gocritic
-func CheckIfSubsExists(ctx context.Context, db *gorm.DB, UserID, SchemeID string) error {
-	// check if such scheme exists.
-	var s SubscriptionModel
-	s.SchemeID = SchemeID
-	exi, err := CheckIfRecordExists(ctx, db, &s)
-	if err != nil {
-		return err
-	}
-	if !exi {
-		return status.Errorf(codes.NotFound, "database: record with given id not found")
-	}
-
-	var u user.UserModel
-	u.UserID = UserID
-	exi, err = user.CheckIfRecordExists(db, &u)
-	if err != nil {
-		return err
-	}
-	if !exi {
-		return status.Errorf(codes.NotFound, "database: record with given id not found")
-	}
-	return nil
-}
-
-func CheckForScheme(ctx context.Context, db *gorm.DB, userID, schemeID string) (bool, error) {
-	var s UserSubscription
-	s.UserID = userID
-	s.SchemeID = schemeID
-	count := int64(0)
-	err := db.WithContext(ctx).Model(&UserSubscription{}).Where(&s).Count(&count).Error
-	if err != nil {
-		return false, err
-	}
-	if count > 0 {
-		return true, nil
-	}
-	return false, nil
-}
-
-func (r repository) search(ctx context.Context, req string) ([]SubscriptionModel, error) {
-	err := checkForTable(r.db)
-	if err != nil {
-		return nil, err
-	}
+func (r repository) search(ctx context.Context, req SearchRequest) ([]SubscriptionModel, error) {
 
 	var resp []SubscriptionModel
-	tx := r.db.WithContext(ctx).Where("name like ?", "%"+req+"%").Find(&resp)
+	tx := r.db.WithContext(ctx).Model(&SubscriptionModel{}).Scopes(req.whereClause()...).Find(&resp)
 
 	if tx.Error != nil {
 		return nil, tx.Error
@@ -304,22 +148,11 @@ func (r repository) search(ctx context.Context, req string) ([]SubscriptionModel
 	return resp, nil
 }
 
-func (r repository) sort(ctx context.Context, req Field) ([]SubscriptionModel, error) {
-	err := checkForTable(r.db)
-	if err != nil {
-		return nil, err
-	}
+func (r repository) sort(ctx context.Context, req string) ([]SubscriptionModel, error) {
 
-	var tx *gorm.DB
 	var resp []SubscriptionModel
-	switch req {
-	case PRICE:
-		tx = r.db.WithContext(ctx).Order("price").Find(&resp)
-	case DAYS:
-		tx = r.db.WithContext(ctx).Order("days").Find(&resp)
-	default:
-		tx = r.db.WithContext(ctx).Order("name").Find(&resp)
-	}
+
+	tx := r.db.WithContext(ctx).Order(req).Find(&resp)
 
 	if tx.Error != nil {
 		return nil, tx.Error
@@ -328,21 +161,9 @@ func (r repository) sort(ctx context.Context, req Field) ([]SubscriptionModel, e
 }
 
 func (r repository) filter(ctx context.Context, req FilterRequest) ([]SubscriptionModel, error) {
-	err := checkForTable(r.db)
-	if err != nil {
-		return nil, err
-	}
 
-	var tx *gorm.DB
 	var resp []SubscriptionModel
-	switch req.field {
-	case PRICE:
-		tx = r.db.WithContext(ctx).Where("price between ? and ?", req.min, req.max).Find(&resp)
-	case DAYS:
-		tx = r.db.WithContext(ctx).Where("days between ? and ?", req.min, req.max).Find(&resp)
-	default:
-		tx = r.db.WithContext(ctx).Order("name").Find(&resp)
-	}
+	tx := r.db.WithContext(ctx).Scopes(req.whereClause()...).Find(&resp)
 
 	if tx.Error != nil {
 		return nil, tx.Error
@@ -352,22 +173,9 @@ func (r repository) filter(ctx context.Context, req FilterRequest) ([]Subscripti
 
 // nolint: gocritic
 func (r repository) getUsers(ctx context.Context, SchemeID string) ([]string, error) {
-	err := checkForTable(r.db)
-	if err != nil {
-		return nil, err
-	}
 
-	var s SubscriptionModel
-	s.SchemeID = SchemeID
-	exi, err := CheckIfRecordExists(ctx, r.db, &s)
-	if err != nil {
-		return nil, err
-	}
-	if !exi {
-		return nil, status.Errorf(codes.NotFound, "database: record with given id not found")
-	}
 	var subs []UserSubscription
-	tx := r.db.WithContext(ctx).Model(&UserSubscription{}).Where(&s).Find(&subs)
+	tx := r.db.WithContext(ctx).Model(&UserSubscription{}).Where(&UserSubscription{SchemeID: SchemeID}).Take(&subs)
 	if tx.Error != nil {
 		return nil, tx.Error
 	}
@@ -377,3 +185,19 @@ func (r repository) getUsers(ctx context.Context, SchemeID string) ([]string, er
 	}
 	return res, nil
 }
+
+// func checkForMysqlError(err error) error {
+// 	var mysqlErr *mysql.MySQLError
+// 	check := errors.As(err, mysqlErr)
+// 	if !check {
+// 		return nil
+// 	}
+// 	switch mysqlErr.Number {
+// 	case 1062:
+// 		return status.Errorf(codes.AlreadyExists, errDuplicateRecord)
+// 	case 1452:
+// 		return status.Errorf(codes.NotFound, errResourceNotFound)
+// 	default:
+// 		return err
+// 	}
+// }

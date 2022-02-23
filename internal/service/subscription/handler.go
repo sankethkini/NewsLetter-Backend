@@ -7,7 +7,7 @@ import (
 	subscriptionpb "github.com/sankethkini/NewsLetter-Backend/proto/subscriptionpb/v1"
 )
 
-type Endpoints struct {
+type API struct {
 	AddUserEndpoint      endpoint.Endpoint
 	RemoveUserEndpoint   endpoint.Endpoint
 	CreateSchemeEndpoint endpoint.Endpoint
@@ -18,7 +18,7 @@ type Endpoints struct {
 	GetUsersEndpoint     endpoint.Endpoint
 }
 
-func (e Endpoints) AddUser(ctx context.Context, req *subscriptionpb.AddUserRequest) (*subscriptionpb.AddUserResponse, error) {
+func (e API) AddUser(ctx context.Context, req *subscriptionpb.AddUserRequest) (*subscriptionpb.AddUserResponse, error) {
 	res, err := e.AddUserEndpoint(ctx, req)
 	if err != nil {
 		return nil, err
@@ -27,7 +27,7 @@ func (e Endpoints) AddUser(ctx context.Context, req *subscriptionpb.AddUserReque
 	return resp, nil
 }
 
-func (e Endpoints) RemoveUser(ctx context.Context, req *subscriptionpb.RemoveUserRequest) (*subscriptionpb.RemoveUserResponse, error) {
+func (e API) RemoveUser(ctx context.Context, req *subscriptionpb.RemoveUserRequest) (*subscriptionpb.RemoveUserResponse, error) {
 	res, err := e.RemoveUserEndpoint(ctx, req)
 	if err != nil {
 		return nil, err
@@ -36,7 +36,7 @@ func (e Endpoints) RemoveUser(ctx context.Context, req *subscriptionpb.RemoveUse
 	return resp, nil
 }
 
-func (e Endpoints) CreateScheme(ctx context.Context, req *subscriptionpb.CreateSchemeRequest) (*subscriptionpb.Scheme, error) {
+func (e API) CreateScheme(ctx context.Context, req *subscriptionpb.CreateSchemeRequest) (*subscriptionpb.Scheme, error) {
 	res, err := e.CreateSchemeEndpoint(ctx, req)
 	if err != nil {
 		return nil, err
@@ -45,7 +45,7 @@ func (e Endpoints) CreateScheme(ctx context.Context, req *subscriptionpb.CreateS
 	return resp, nil
 }
 
-func (e Endpoints) Renew(ctx context.Context, req *subscriptionpb.RenewRequest) (*subscriptionpb.RenewResponse, error) {
+func (e API) Renew(ctx context.Context, req *subscriptionpb.RenewRequest) (*subscriptionpb.RenewResponse, error) {
 	res, err := e.RenewEndpoint(ctx, req)
 	if err != nil {
 		return nil, err
@@ -54,7 +54,7 @@ func (e Endpoints) Renew(ctx context.Context, req *subscriptionpb.RenewRequest) 
 	return resp, nil
 }
 
-func (e Endpoints) Search(ctx context.Context, req *subscriptionpb.SearchRequest) (*subscriptionpb.SearchResponse, error) {
+func (e API) Search(ctx context.Context, req *subscriptionpb.SearchRequest) (*subscriptionpb.SearchResponse, error) {
 	res, err := e.RenewEndpoint(ctx, req)
 	if err != nil {
 		return nil, err
@@ -63,7 +63,7 @@ func (e Endpoints) Search(ctx context.Context, req *subscriptionpb.SearchRequest
 	return resp, nil
 }
 
-func (e Endpoints) Sort(ctx context.Context, req *subscriptionpb.SortRequest) (*subscriptionpb.SortResponse, error) {
+func (e API) Sort(ctx context.Context, req *subscriptionpb.SortRequest) (*subscriptionpb.SortResponse, error) {
 	res, err := e.RenewEndpoint(ctx, req)
 	if err != nil {
 		return nil, err
@@ -72,7 +72,7 @@ func (e Endpoints) Sort(ctx context.Context, req *subscriptionpb.SortRequest) (*
 	return resp, nil
 }
 
-func (e Endpoints) Filter(ctx context.Context, req *subscriptionpb.FilterRequest) (*subscriptionpb.FilterResponse, error) {
+func (e API) Filter(ctx context.Context, req *subscriptionpb.FilterRequest) (*subscriptionpb.FilterResponse, error) {
 	res, err := e.RenewEndpoint(ctx, req)
 	if err != nil {
 		return nil, err
@@ -81,7 +81,7 @@ func (e Endpoints) Filter(ctx context.Context, req *subscriptionpb.FilterRequest
 	return resp, nil
 }
 
-func (e Endpoints) GetUsers(ctx context.Context, req *subscriptionpb.GetUsersRequest) (*subscriptionpb.GetUsersResponse, error) {
+func (e API) GetUsers(ctx context.Context, req *subscriptionpb.GetUsersRequest) (*subscriptionpb.GetUsersResponse, error) {
 	res, err := e.GetUsersEndpoint(ctx, req)
 	if err != nil {
 		return nil, err

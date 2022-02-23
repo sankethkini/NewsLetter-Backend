@@ -7,13 +7,13 @@ import (
 	userpb "github.com/sankethkini/NewsLetter-Backend/proto/userpb/v1"
 )
 
-type Endpoints struct {
+type API struct {
 	CreateUserEndpoint   endpoint.Endpoint
 	ValidateUserEndpoint endpoint.Endpoint
 	GetEmailEndpoint     endpoint.Endpoint
 }
 
-func (e Endpoints) CreateUser(ctx context.Context, req *userpb.CreateUserRequest) (*userpb.User, error) {
+func (e API) CreateUser(ctx context.Context, req *userpb.CreateUserRequest) (*userpb.User, error) {
 	res, err := e.CreateUserEndpoint(ctx, req)
 	if err != nil {
 		return nil, err
@@ -22,7 +22,7 @@ func (e Endpoints) CreateUser(ctx context.Context, req *userpb.CreateUserRequest
 	return resp, nil
 }
 
-func (e Endpoints) ValidateUser(ctx context.Context, req *userpb.ValidateUserRequest) (*userpb.ValidateUserResponse, error) {
+func (e API) ValidateUser(ctx context.Context, req *userpb.ValidateUserRequest) (*userpb.ValidateUserResponse, error) {
 	res, err := e.ValidateUserEndpoint(ctx, req)
 	if err != nil {
 		return nil, err
@@ -31,7 +31,7 @@ func (e Endpoints) ValidateUser(ctx context.Context, req *userpb.ValidateUserReq
 	return resp, nil
 }
 
-func (e Endpoints) GetEmail(ctx context.Context, req *userpb.GetEmailRequest) (*userpb.Email, error) {
+func (e API) GetEmail(ctx context.Context, req *userpb.GetEmailRequest) (*userpb.Email, error) {
 	res, err := e.ValidateUserEndpoint(ctx, req)
 	if err != nil {
 		return nil, err

@@ -6,6 +6,7 @@ import (
 	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/sankethkini/NewsLetter-Backend/internal/enum"
 	subscriptionpb "github.com/sankethkini/NewsLetter-Backend/proto/subscriptionpb/v1"
+	"gorm.io/gorm"
 )
 
 type Metadata struct {
@@ -34,6 +35,12 @@ type UserSubscription struct {
 	Validity time.Time `gorm:"column:validity;type:datetime;"`
 }
 
+type AddUserRequest struct {
+	UserID   string
+	SchemeID string
+	Validity time.Time
+}
+
 type UserSchemeRequest struct {
 	UserID   string
 	SchemeID string
@@ -43,6 +50,10 @@ type SchemeRequest struct {
 	name  string
 	price float64
 	days  int
+}
+
+type SearchRequest struct {
+	query string
 }
 
 type RenewResponse struct {
@@ -56,6 +67,29 @@ type FilterRequest struct {
 	field enum.Field
 	min   float32
 	max   float32
+}
+
+func (f FilterRequest) whereClause() []func(*gorm.DB) *gorm.DB {
+	var clause []func(*gorm.DB) *gorm.DB
+	switch f.field {
+	case enum.PRICE:
+		clause = append(clause, func(d *gorm.DB) *gorm.DB {
+			return d.Where("price between ? and ?", f.min, f.max)
+		})
+	case enum.DAYS:
+		clause = append(clause, func(d *gorm.DB) *gorm.DB {
+			return d.Where("days between ? and ?", f.min, f.max)
+		})
+	}
+	return clause
+}
+
+func (s SearchRequest) whereClause() []func(*gorm.DB) *gorm.DB {
+	var clause []func(*gorm.DB) *gorm.DB
+	clause = append(clause, func(d *gorm.DB) *gorm.DB {
+		return d.Where("name like ?", "%"+s.query+"%")
+	})
+	return clause
 }
 
 func (u UserSchemeRequest) validate() error {

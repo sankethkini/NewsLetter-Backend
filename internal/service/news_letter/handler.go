@@ -7,12 +7,12 @@ import (
 	newsletterpb "github.com/sankethkini/NewsLetter-Backend/proto/newsletterpb/v1"
 )
 
-type Endpoints struct {
+type API struct {
 	CreateNewsLetterEndpoint endpoint.Endpoint
 	AddSchemeToNewsEndpoint  endpoint.Endpoint
 }
 
-func (e Endpoints) CreateNewsLetter(ctx context.Context, req *newsletterpb.CreateNewsLetterRequest) (*newsletterpb.NewsLetter, error) {
+func (e API) CreateNewsLetter(ctx context.Context, req *newsletterpb.CreateNewsLetterRequest) (*newsletterpb.NewsLetter, error) {
 	res, err := e.CreateNewsLetterEndpoint(ctx, req)
 	if err != nil {
 		return nil, err
@@ -21,7 +21,7 @@ func (e Endpoints) CreateNewsLetter(ctx context.Context, req *newsletterpb.Creat
 	return resp, nil
 }
 
-func (e Endpoints) AddSchemeToNews(ctx context.Context, req *newsletterpb.NewsScheme) (*newsletterpb.NewsScheme, error) {
+func (e API) AddSchemeToNews(ctx context.Context, req *newsletterpb.NewsScheme) (*newsletterpb.NewsScheme, error) {
 	res, err := e.AddSchemeToNewsEndpoint(ctx, req)
 	if err != nil {
 		return nil, err

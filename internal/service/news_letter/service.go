@@ -23,11 +23,12 @@ func NewNewsService(repo DB, kaf kproducer.Producer) Service {
 }
 
 func (svc *service) CreateNewsLetter(ctx context.Context, req *newsletterpb.CreateNewsLetterRequest) (*newsletterpb.NewsLetter, error) {
-	var mod NewsLetterModel
-	mod.NewsLetterID = uuid.NewString()
-	mod.Body = req.Body
-	mod.Title = req.Title
-	resp, err := svc.repo.addNewsLetter(ctx, &mod)
+	var dbreq = NewsLetterModel{NewsLetterID: uuid.NewString(), Title: req.Title, Body: req.Body}
+	if err := dbreq.validate(); err != nil {
+		return nil, err
+	}
+
+	resp, err := svc.repo.addNewsLetter(ctx, &dbreq)
 	if err != nil {
 		return nil, err
 	}
@@ -36,10 +37,12 @@ func (svc *service) CreateNewsLetter(ctx context.Context, req *newsletterpb.Crea
 
 // nolint:govet
 func (svc *service) AddSchemeToNews(ctx context.Context, req *newsletterpb.NewsScheme) (*newsletterpb.NewsScheme, error) {
-	var mod AddSchemeRequest
-	mod.SchemeID = req.SchemeId
-	mod.NewsLetterID = req.NewsLetterId
-	resp, err := svc.repo.addSchemeToNews(ctx, mod)
+	dbreq := AddSchemeRequest{NewsLetterID: req.NewsLetterId, SchemeID: req.SchemeId}
+	if err := dbreq.validate(); err != nil {
+		return nil, err
+	}
+
+	resp, err := svc.repo.addSchemeToNews(ctx, dbreq)
 	if err != nil {
 		return nil, err
 	}
@@ -49,7 +52,7 @@ func (svc *service) AddSchemeToNews(ctx context.Context, req *newsletterpb.NewsS
 		return nil, err
 	}
 
-	r1 := ModelToProto(&news)
+	r1 := ModelToProto(news)
 	res := SchemeToProto(resp)
 
 	data := EmailData{Letter: *r1, Scheme: res}

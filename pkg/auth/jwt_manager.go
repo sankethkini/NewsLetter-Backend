@@ -5,7 +5,7 @@ import (
 
 	"github.com/golang-jwt/jwt"
 	"github.com/pkg/errors"
-	"github.com/sankethkini/NewsLetter-Backend/pkg/role"
+	"github.com/sankethkini/NewsLetter-Backend/internal/enum"
 )
 
 type JWTConfig struct {
@@ -31,7 +31,7 @@ func NewJWTManager(cfg JWTConfig) *JWTManager {
 	}
 }
 
-func (manager *JWTManager) Generator(email string, role role.Access) (string, error) {
+func (manager *JWTManager) Generator(email string, role enum.Access) (string, error) {
 	claims := UserClaims{
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: time.Now().Add(manager.tokenDuration).Unix(),

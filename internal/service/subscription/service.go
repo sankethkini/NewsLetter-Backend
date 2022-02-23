@@ -2,7 +2,10 @@ package subscription
 
 import (
 	"context"
+	"time"
 
+	"github.com/google/uuid"
+	"github.com/sankethkini/NewsLetter-Backend/internal/enum"
 	"github.com/sankethkini/NewsLetter-Backend/pkg/cache"
 	subscriptionpb "github.com/sankethkini/NewsLetter-Backend/proto/subscriptionpb/v1"
 )
@@ -29,14 +32,21 @@ func NewSubService(repo DB, redis cache.Service) Service {
 
 // nolint: gosec
 func (svc *service) AddUser(ctx context.Context, req *subscriptionpb.AddUserRequest) (*subscriptionpb.AddUserResponse, error) {
-	var usr UserSchemeRequest
-	usr.SchemeID = req.SchemeId
-	usr.UserID = req.UserId
 
-	resp, err := svc.repo.addUser(ctx, usr)
+	dbreq := AddUserRequest{UserID: req.UserId, SchemeID: req.SchemeId}
+
+	sub, err := svc.repo.getSubscription(ctx, req.SchemeId)
 	if err != nil {
 		return nil, err
 	}
+
+	val := time.Now().AddDate(0, 0, sub.Days)
+	dbreq.Validity = val
+	resp, err := svc.repo.addUser(ctx, dbreq)
+	if err != nil {
+		return nil, err
+	}
+
 	res := make([]*subscriptionpb.UserSubscription, 0, len(resp))
 	for _, val := range resp {
 		res = append(res, UserSubModelToProto(&val))
@@ -48,11 +58,14 @@ func (svc *service) AddUser(ctx context.Context, req *subscriptionpb.AddUserRequ
 
 // nolint: gosec
 func (svc *service) RemoveUser(ctx context.Context, req *subscriptionpb.RemoveUserRequest) (*subscriptionpb.RemoveUserResponse, error) {
-	var usr UserSchemeRequest
-	usr.SchemeID = req.SchemeId
-	usr.UserID = req.UserId
 
-	resp, err := svc.repo.removeUser(ctx, usr)
+	dbreq := UserSchemeRequest{UserID: req.UserId, SchemeID: req.SchemeId}
+
+	if err := dbreq.validate(); err != nil {
+		return nil, err
+	}
+
+	resp, err := svc.repo.removeUser(ctx, dbreq)
 	if err != nil {
 		return nil, err
 	}
@@ -68,12 +81,8 @@ func (svc *service) RemoveUser(ctx context.Context, req *subscriptionpb.RemoveUs
 }
 
 func (svc *service) CreateScheme(ctx context.Context, req *subscriptionpb.CreateSchemeRequest) (*subscriptionpb.Scheme, error) {
-	var usr SchemeRequest
-	usr.name = req.Name
-	usr.days = int(req.Days)
-	usr.price = float64(req.Price)
-
-	resp, err := svc.repo.createScheme(ctx, usr)
+	mod := SubscriptionModel{SchemeID: uuid.NewString(), Name: req.Name, Days: int(req.Days), Price: float64(req.Price)}
+	resp, err := svc.repo.createScheme(ctx, &mod)
 	if err != nil {
 		return nil, err
 	}
@@ -83,13 +92,35 @@ func (svc *service) CreateScheme(ctx context.Context, req *subscriptionpb.Create
 }
 
 func (svc *service) Renew(ctx context.Context, req *subscriptionpb.RenewRequest) (*subscriptionpb.RenewResponse, error) {
-	var usr UserSchemeRequest
-	usr.SchemeID = req.SchemeId
-	usr.UserID = req.UserId
-	resp, err := svc.repo.renew(ctx, usr)
+	dbreq := UserSchemeRequest{UserID: req.UserId, SchemeID: req.SchemeId}
+
+	if err := dbreq.validate(); err != nil {
+		return nil, err
+	}
+	mod, err := svc.repo.getUserScheme(ctx, dbreq)
 	if err != nil {
 		return nil, err
 	}
+
+	sub, err := svc.repo.getSubscription(ctx, req.SchemeId)
+	if err != nil {
+		return nil, err
+	}
+
+	usrTime := mod.Validity
+	curTime := time.Now()
+	var val time.Time
+	if usrTime.Sub(curTime) <= 0 {
+		val = time.Now().AddDate(0, 0, sub.Days)
+	} else {
+		val = usrTime.AddDate(0, 0, sub.Days)
+	}
+
+	resp, err := svc.repo.renew(ctx, dbreq, val)
+	if err != nil {
+		return nil, err
+	}
+
 	res := UserSubModelToProto(resp)
 	return &subscriptionpb.RenewResponse{Sub: res}, nil
 }
@@ -102,7 +133,7 @@ func (svc *service) Search(ctx context.Context, req *subscriptionpb.SearchReques
 		return &subscriptionpb.SearchResponse{Subs: data}, nil
 	}
 
-	resp, err := svc.repo.search(ctx, req.Text)
+	resp, err := svc.repo.search(ctx, SearchRequest{req.Text})
 	if err != nil {
 		return nil, err
 	}
@@ -126,7 +157,7 @@ func (svc *service) Sort(ctx context.Context, req *subscriptionpb.SortRequest) (
 		return &subscriptionpb.SortResponse{Subs: data}, nil
 	}
 
-	resp, err := svc.repo.sort(ctx, Field(req.Field))
+	resp, err := svc.repo.sort(ctx, req.Field.String())
 	if err != nil {
 		return nil, err
 	}
@@ -149,7 +180,7 @@ func (svc *service) Filter(ctx context.Context, req *subscriptionpb.FilterReques
 	}
 
 	var mod FilterRequest
-	mod.field = Field(req.Field)
+	mod.field = enum.Field(req.Field)
 	mod.min = req.Min
 	mod.max = req.Max
 	resp, err := svc.repo.filter(ctx, mod)

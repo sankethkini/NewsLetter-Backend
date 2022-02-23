@@ -7,11 +7,11 @@ import (
 	adminpb "github.com/sankethkini/NewsLetter-Backend/proto/adminpb/v1"
 )
 
-type Endpoints struct {
+type API struct {
 	SignIn endpoint.Endpoint
 }
 
-func (e Endpoints) SingIn(ctx context.Context, req *adminpb.SignInRequest) (*adminpb.SignInResponse, error) {
+func (e API) SingIn(ctx context.Context, req *adminpb.SignInRequest) (*adminpb.SignInResponse, error) {
 	res, err := e.SignIn(ctx, req)
 	if err != nil {
 		return nil, err

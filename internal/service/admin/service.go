@@ -3,9 +3,9 @@ package admin
 import (
 	"context"
 
+	"github.com/sankethkini/NewsLetter-Backend/internal/enum"
 	"github.com/sankethkini/NewsLetter-Backend/pkg/auth"
 	"github.com/sankethkini/NewsLetter-Backend/pkg/encryption"
-	"github.com/sankethkini/NewsLetter-Backend/pkg/role"
 	adminpb "github.com/sankethkini/NewsLetter-Backend/proto/adminpb/v1"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -28,8 +28,14 @@ func NewAdminService(repo DB, jwt *auth.JWTManager) Service {
 }
 
 func (adm *service) SingIn(ctx context.Context, req *adminpb.SignInRequest) (*adminpb.SignInResponse, error) {
-	mod := SignInRequest{Email: req.Email, Password: req.Password}
-	resp, err := adm.repo.signIn(ctx, mod)
+	dbreq := SignInRequest{Email: req.Email, Password: req.Password}
+
+	err := dbreq.validate()
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := adm.repo.getUser(ctx, dbreq)
 	if err != nil {
 		return nil, err
 	}
@@ -39,7 +45,7 @@ func (adm *service) SingIn(ctx context.Context, req *adminpb.SignInRequest) (*ad
 		return nil, status.Errorf(codes.Unauthenticated, "email and password not matching")
 	}
 
-	token, err := adm.jwtManager.Generator(req.Email, role.ADMIN)
+	token, err := adm.jwtManager.Generator(req.Email, enum.ADMIN)
 	if err != nil {
 		return nil, err
 	}
