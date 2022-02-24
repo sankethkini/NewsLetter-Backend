@@ -28,6 +28,22 @@ func NewEmailServer(email EmailConfig) *Email {
 	return &Email{email: email}
 }
 
+type Mail struct {
+	Sender  string
+	To      []string
+	Subject string
+	Body    string
+}
+
+func NewMail(to []string, subject string, body string) Mail {
+	return Mail{
+		To:      to,
+		Subject: subject,
+		Body:    body,
+	}
+}
+
+// get emails of the users to whom newsletter have to be send.
 // nolint: govet,staticcheck
 func (em Email) GetEmails(ctx context.Context, n newsletter.EmailData) ([]string, error) {
 	serverAddress := em.email.GrpcPort
@@ -63,21 +79,7 @@ func (em Email) GetEmails(ctx context.Context, n newsletter.EmailData) ([]string
 	return emails, nil
 }
 
-type Mail struct {
-	Sender  string
-	To      []string
-	Subject string
-	Body    string
-}
-
-func NewMail(to []string, subject string, body string) Mail {
-	return Mail{
-		To:      to,
-		Subject: subject,
-		Body:    body,
-	}
-}
-
+// send emails to respective emails.
 func (em Email) SendEmail(m Mail) error {
 	from := em.email.From
 	password := em.email.Password
@@ -100,6 +102,7 @@ func (em Email) SendEmail(m Mail) error {
 	return nil
 }
 
+// build message, add title and body.
 func BuildMessage(mail Mail) string {
 	msg := ""
 	msg += fmt.Sprintf("From: %s\r\n", mail.Sender)

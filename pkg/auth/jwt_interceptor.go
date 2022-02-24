@@ -20,6 +20,7 @@ func NewAuthInterceptor(jwtManager *JWTManager, accRoles map[string][]string) *A
 	return &AuthInterceptor{jwtManager, accRoles}
 }
 
+// unary interceptor.
 func (interceptor *AuthInterceptor) Unary() grpc.UnaryServerInterceptor {
 	return func(
 		ctx context.Context,
@@ -37,6 +38,7 @@ func (interceptor *AuthInterceptor) Unary() grpc.UnaryServerInterceptor {
 	}
 }
 
+// check for authorization.
 func (interceptor *AuthInterceptor) authorize(ctx context.Context, method string) error {
 	fmt.Println(method)
 	accessibleRoles, ok := interceptor.accessibleRoles[method]

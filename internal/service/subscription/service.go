@@ -6,8 +6,13 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/sankethkini/NewsLetter-Backend/internal/enum"
+	"github.com/sankethkini/NewsLetter-Backend/pkg/apperrors"
 	"github.com/sankethkini/NewsLetter-Backend/pkg/cache"
 	subscriptionpb "github.com/sankethkini/NewsLetter-Backend/proto/subscriptionpb/v1"
+)
+
+const (
+	errInputValues = "error in input values"
 )
 
 type Service interface {
@@ -32,12 +37,11 @@ func NewSubService(repo DB, redis cache.Service) Service {
 
 // nolint: gosec
 func (svc *service) AddUser(ctx context.Context, req *subscriptionpb.AddUserRequest) (*subscriptionpb.AddUserResponse, error) {
-
 	dbreq := AddUserRequest{UserID: req.UserId, SchemeID: req.SchemeId}
 
 	sub, err := svc.repo.getSubscription(ctx, req.SchemeId)
 	if err != nil {
-		return nil, err
+		return nil, apperrors.E(ctx, errInputValues)
 	}
 
 	val := time.Now().AddDate(0, 0, sub.Days)
@@ -58,11 +62,10 @@ func (svc *service) AddUser(ctx context.Context, req *subscriptionpb.AddUserRequ
 
 // nolint: gosec
 func (svc *service) RemoveUser(ctx context.Context, req *subscriptionpb.RemoveUserRequest) (*subscriptionpb.RemoveUserResponse, error) {
-
 	dbreq := UserSchemeRequest{UserID: req.UserId, SchemeID: req.SchemeId}
 
 	if err := dbreq.validate(); err != nil {
-		return nil, err
+		return nil, apperrors.E(ctx, errInputValues)
 	}
 
 	resp, err := svc.repo.removeUser(ctx, dbreq)
@@ -95,7 +98,7 @@ func (svc *service) Renew(ctx context.Context, req *subscriptionpb.RenewRequest)
 	dbreq := UserSchemeRequest{UserID: req.UserId, SchemeID: req.SchemeId}
 
 	if err := dbreq.validate(); err != nil {
-		return nil, err
+		return nil, apperrors.E(ctx, errInputValues)
 	}
 	mod, err := svc.repo.getUserScheme(ctx, dbreq)
 	if err != nil {

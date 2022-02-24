@@ -44,6 +44,7 @@ func (s service) Set(ctx context.Context, key string, value []*subscriptionpb.Sc
 	js, err := json.Marshal(value)
 	if err != nil {
 		logger.Sugar().Fatal("caanot marshal into cache")
+		return
 	}
 	s.client.Set(ctx, key, string(js), s.exp)
 }

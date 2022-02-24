@@ -4,8 +4,8 @@ import (
 	"context"
 
 	"github.com/google/uuid"
-	"github.com/pkg/errors"
 	"github.com/sankethkini/NewsLetter-Backend/internal/enum"
+	"github.com/sankethkini/NewsLetter-Backend/pkg/apperrors"
 	"github.com/sankethkini/NewsLetter-Backend/pkg/auth"
 	"github.com/sankethkini/NewsLetter-Backend/pkg/encryption"
 	userpb "github.com/sankethkini/NewsLetter-Backend/proto/userpb/v1"
@@ -13,6 +13,8 @@ import (
 
 const (
 	errEmailPasswordNotMatch = "email or password is inncorect"
+	errInputValues           = "error in input values"
+	errTokenGen              = "error in generating token"
 )
 
 type Service interface {
@@ -39,7 +41,7 @@ func (u *service) CreateUser(ctx context.Context, usr *userpb.CreateUserRequest)
 	m.UserID = uuid.NewString()
 	m.Password = encryption.Encrypt(m.Password)
 	if err := m.validate(); err != nil {
-		return nil, err
+		return nil, apperrors.E(ctx, err, errInputValues)
 	}
 
 	ret, err := u.repo.insertUser(ctx, &m)
@@ -54,7 +56,7 @@ func (u *service) CreateUser(ctx context.Context, usr *userpb.CreateUserRequest)
 func (u *service) ValidateUser(ctx context.Context, sgn *userpb.ValidateUserRequest) (*userpb.ValidateUserResponse, error) {
 	dbreq := SignInRequest{Email: sgn.Email, Password: sgn.Password}
 	if err := dbreq.validate(); err != nil {
-		return nil, err
+		return nil, apperrors.E(ctx, err, errInputValues)
 	}
 
 	b, err := u.repo.getUser(ctx, dbreq)
@@ -66,18 +68,18 @@ func (u *service) ValidateUser(ctx context.Context, sgn *userpb.ValidateUserRequ
 	if val {
 		token, err := u.jwtManager.Generator(b.Email, enum.USER)
 		if err != nil {
-			return nil, err
+			return nil, apperrors.E(ctx, err, errTokenGen)
 		}
 		return &userpb.ValidateUserResponse{UserId: b.UserID, Token: token, Email: b.Email, Name: b.Name}, nil
 	}
 
-	return nil, errors.New(errEmailPasswordNotMatch)
+	return nil, apperrors.E(ctx, errEmailPasswordNotMatch)
 }
 
 func (u *service) GetEmail(ctx context.Context, usrID *userpb.GetEmailRequest) (*userpb.Email, error) {
 	dbreq := GetEmailRequest{ID: usrID.Name}
 	if err := dbreq.validate(); err != nil {
-		return nil, err
+		return nil, apperrors.E(ctx, err, errInputValues)
 	}
 
 	email, err := u.repo.getEmail(ctx, dbreq)

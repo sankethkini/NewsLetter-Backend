@@ -5,7 +5,13 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/sankethkini/NewsLetter-Backend/internal/kproducer"
+	"github.com/sankethkini/NewsLetter-Backend/pkg/apperrors"
 	newsletterpb "github.com/sankethkini/NewsLetter-Backend/proto/newsletterpb/v1"
+)
+
+const (
+	errInputValues = "error in input values"
+	errParsing     = "error in parsing values"
 )
 
 type Service interface {
@@ -23,9 +29,9 @@ func NewNewsService(repo DB, kaf kproducer.Producer) Service {
 }
 
 func (svc *service) CreateNewsLetter(ctx context.Context, req *newsletterpb.CreateNewsLetterRequest) (*newsletterpb.NewsLetter, error) {
-	var dbreq = NewsLetterModel{NewsLetterID: uuid.NewString(), Title: req.Title, Body: req.Body}
+	dbreq := NewsLetterModel{NewsLetterID: uuid.NewString(), Title: req.Title, Body: req.Body}
 	if err := dbreq.validate(); err != nil {
-		return nil, err
+		return nil, apperrors.E(ctx, err, errInputValues)
 	}
 
 	resp, err := svc.repo.addNewsLetter(ctx, &dbreq)
@@ -39,7 +45,7 @@ func (svc *service) CreateNewsLetter(ctx context.Context, req *newsletterpb.Crea
 func (svc *service) AddSchemeToNews(ctx context.Context, req *newsletterpb.NewsScheme) (*newsletterpb.NewsScheme, error) {
 	dbreq := AddSchemeRequest{NewsLetterID: req.NewsLetterId, SchemeID: req.SchemeId}
 	if err := dbreq.validate(); err != nil {
-		return nil, err
+		return nil, apperrors.E(ctx, err, errInputValues)
 	}
 
 	resp, err := svc.repo.addSchemeToNews(ctx, dbreq)
@@ -56,10 +62,11 @@ func (svc *service) AddSchemeToNews(ctx context.Context, req *newsletterpb.NewsS
 	res := SchemeToProto(resp)
 
 	data := EmailData{Letter: *r1, Scheme: res}
-	msg, err := tojson(data)
+	msg, err := toJSON(data)
 	if err != nil {
-		return nil, err
+		return nil, apperrors.E(ctx, err, errParsing)
 	}
+
 	err = svc.kaf.Produce(ctx, []byte(req.NewsLetterId), []byte(msg))
 	if err != nil {
 		return nil, err

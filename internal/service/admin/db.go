@@ -4,11 +4,12 @@ import (
 	"context"
 
 	"github.com/pkg/errors"
+	"github.com/sankethkini/NewsLetter-Backend/pkg/apperrors"
 	"gorm.io/gorm"
 )
 
 const (
-	errResourceNotFound = "error resource not found"
+	errResourceNotFound = "database: error resource not found %s"
 )
 
 type DB interface {
@@ -30,9 +31,9 @@ func (r repository) getUser(ctx context.Context, req SignInRequest) (*AdminModel
 	tx := r.db.WithContext(ctx).Model(&AdminModel{}).Where(&AdminModel{Email: req.Email}).Take(&res)
 	if tx.Error != nil {
 		if errors.Is(tx.Error, gorm.ErrRecordNotFound) {
-			return nil, errors.Wrap(tx.Error, errResourceNotFound)
+			return nil, apperrors.E(ctx, errors.Wrapf(tx.Error, errResourceNotFound, req.Email))
 		}
-
+		return nil, apperrors.E(ctx, tx.Error)
 	}
 	return &res, nil
 }

@@ -31,6 +31,7 @@ func NewJWTManager(cfg JWTConfig) *JWTManager {
 	}
 }
 
+// generate new token.
 func (manager *JWTManager) Generator(email string, role enum.Access) (string, error) {
 	claims := UserClaims{
 		StandardClaims: jwt.StandardClaims{
@@ -43,6 +44,7 @@ func (manager *JWTManager) Generator(email string, role enum.Access) (string, er
 	return token.SignedString([]byte(manager.secretKey))
 }
 
+// validate the token.
 func (manager *JWTManager) Validate(accessToken string) (*UserClaims, error) {
 	token, err := jwt.ParseWithClaims(accessToken,
 		&UserClaims{},
@@ -51,7 +53,6 @@ func (manager *JWTManager) Validate(accessToken string) (*UserClaims, error) {
 			if !ok {
 				return nil, errors.New("unexpected token claims")
 			}
-
 			return []byte(manager.secretKey), nil
 		})
 	if err != nil {

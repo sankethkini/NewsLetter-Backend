@@ -65,13 +65,13 @@ func LoadEmailConfig(app *AppConfig) email.EmailConfig {
 	return app.Email
 }
 
+// give access to specific roles.
 func LoadAccessibleRoles() map[string][]string {
 	const subsPath = "/subscriptionpb.v1.SubscriptionService/"
 	const newsPath = "/newsletterpb.v1.NewsLetterService/"
 
 	return map[string][]string{
 		// this will be done when needed and it will be like below.
-
 		newsPath + "CreateNewsLetter": {enum.ADMIN.String()},
 		newsPath + "AddSchemeToNews":  {enum.ADMIN.String()},
 		subsPath + "CreateScheme":     {enum.ADMIN.String()},

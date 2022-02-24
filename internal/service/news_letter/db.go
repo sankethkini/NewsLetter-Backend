@@ -4,11 +4,13 @@ import (
 	"context"
 
 	"github.com/pkg/errors"
+	"github.com/sankethkini/NewsLetter-Backend/pkg/apperrors"
 	"gorm.io/gorm"
 )
 
 const (
-	errResourceNotFound = "error resource not found"
+	errResourceNotFound = "database: error resource not found %s"
+	errCreate           = "database: error in creating resource %s"
 )
 
 type DB interface {
@@ -30,7 +32,7 @@ func NewNewsRepo(db *gorm.DB) DB {
 func (r repository) addNewsLetter(ctx context.Context, req *NewsLetterModel) (*NewsLetterModel, error) {
 	tx := r.db.WithContext(ctx).Create(&req)
 	if tx.Error != nil {
-		return nil, tx.Error
+		return nil, apperrors.E(ctx, errors.Wrapf(tx.Error, errCreate, req.NewsLetterID))
 	}
 
 	ret, err := r.getNewsLetter(ctx, req.NewsLetterID)
@@ -41,33 +43,30 @@ func (r repository) addNewsLetter(ctx context.Context, req *NewsLetterModel) (*N
 }
 
 func (r repository) addSchemeToNews(ctx context.Context, req AddSchemeRequest) (*NewsSchemes, error) {
-
-	var mod NewsSchemes
-	mod.NewsLetterID = req.NewsLetterID
-	mod.SchemeID = req.SchemeID
+	mod := NewsSchemes{NewsLetterID: req.NewsLetterID, SchemeID: req.SchemeID}
 	tx := r.db.WithContext(ctx).Create(&mod)
 
 	if tx.Error != nil {
-		return nil, tx.Error
+		return nil, apperrors.E(ctx, errors.Wrapf(tx.Error, errCreate, req.NewsLetterID))
 	}
 
 	var resp NewsSchemes
 	tx = r.db.WithContext(ctx).Model(&NewsSchemes{}).Where(&NewsSchemes{NewsLetterID: req.NewsLetterID, SchemeID: req.SchemeID}).Take(&resp)
 	if tx.Error != nil {
-		return nil, tx.Error
+		return nil, apperrors.E(ctx, errors.Wrapf(tx.Error, errResourceNotFound, req.NewsLetterID))
 	}
 	return &resp, nil
 }
 
 func (r repository) getNewsLetter(ctx context.Context, id string) (*NewsLetterModel, error) {
-
 	var resp NewsLetterModel
 	tx := r.db.WithContext(ctx).Model(&NewsLetterModel{}).Where(&NewsLetterModel{NewsLetterID: id}).Take(&resp)
 
 	if tx.Error != nil {
 		if errors.Is(tx.Error, gorm.ErrRecordNotFound) {
-			return nil, errors.Wrap(tx.Error, errResourceNotFound)
+			return nil, apperrors.E(ctx, tx.Error, errors.Wrapf(tx.Error, errResourceNotFound, id))
 		}
+		return nil, apperrors.E(ctx, tx.Error)
 	}
 
 	return &resp, nil

@@ -90,7 +90,7 @@ func SchemeToProto(mod *NewsSchemes) newsletterpb.NewsScheme {
 }
 
 // nolint: govet
-func tojson(n EmailData) (string, error) {
+func toJSON(n EmailData) (string, error) {
 	js, err := json.Marshal(n)
 	if err != nil {
 		return "", err

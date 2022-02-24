@@ -4,11 +4,17 @@ import (
 	"context"
 
 	"github.com/sankethkini/NewsLetter-Backend/internal/enum"
+	"github.com/sankethkini/NewsLetter-Backend/pkg/apperrors"
 	"github.com/sankethkini/NewsLetter-Backend/pkg/auth"
 	"github.com/sankethkini/NewsLetter-Backend/pkg/encryption"
 	adminpb "github.com/sankethkini/NewsLetter-Backend/proto/adminpb/v1"
 	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
+)
+
+const (
+	errInputVal      = "error in input values"
+	errEmailPassword = "email and password not matching"
+	errTokenGen      = "error in token generation"
 )
 
 type Service interface {
@@ -32,7 +38,7 @@ func (adm *service) SingIn(ctx context.Context, req *adminpb.SignInRequest) (*ad
 
 	err := dbreq.validate()
 	if err != nil {
-		return nil, err
+		return nil, apperrors.E(ctx, err, errInputVal)
 	}
 
 	resp, err := adm.repo.getUser(ctx, dbreq)
@@ -42,12 +48,12 @@ func (adm *service) SingIn(ctx context.Context, req *adminpb.SignInRequest) (*ad
 
 	ok := encryption.Compare(req.Password, []byte(resp.Password))
 	if !ok {
-		return nil, status.Errorf(codes.Unauthenticated, "email and password not matching")
+		return nil, apperrors.E(ctx, codes.Unauthenticated, errEmailPassword)
 	}
 
 	token, err := adm.jwtManager.Generator(req.Email, enum.ADMIN)
 	if err != nil {
-		return nil, err
+		return nil, apperrors.E(ctx, err, errTokenGen)
 	}
 	return &adminpb.SignInResponse{AdminId: resp.AdminID, Token: token}, nil
 }

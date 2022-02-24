@@ -3,9 +3,14 @@ package kafkaservice
 import (
 	"context"
 
+	"github.com/grpc-ecosystem/go-grpc-middleware/logging/zap/ctxzap"
 	newsletter "github.com/sankethkini/NewsLetter-Backend/internal/service/news_letter"
 	"github.com/sankethkini/NewsLetter-Backend/pkg/email"
 	kafka "github.com/segmentio/kafka-go"
+)
+
+const (
+	errRead = "kafka: cannot read"
 )
 
 type ConsumerConfig struct {
@@ -29,21 +34,24 @@ func NewConsumer(cfg ConsumerConfig, email *email.Email) *Consumer {
 }
 
 func (c Consumer) Consume(ctx context.Context) {
-	// logger := ctxzap.Extract(ctx)
+	logger := ctxzap.Extract(ctx)
 
 	for {
 		msg, err := c.reader.ReadMessage(ctx)
 		if err != nil {
+			logger.Sugar().Fatal(errRead)
 			panic(err)
 		}
 
 		err = c.PostConsume(ctx, msg)
 		if err != nil {
+			logger.Sugar().Fatal(errRead)
 			panic(err)
 		}
 	}
 }
 
+// code to execute after a consume.
 // nolint: govet
 func (c Consumer) PostConsume(ctx context.Context, msg kafka.Message) error {
 	msg1, err := newsletter.ToModel(string(msg.Value))

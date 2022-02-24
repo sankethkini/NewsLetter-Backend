@@ -7,7 +7,10 @@ require (
 	gorm.io/gorm v1.22.5
 )
 
-require github.com/golang-jwt/jwt v3.2.2+incompatible
+require (
+	github.com/go-sql-driver/mysql v1.6.0
+	github.com/golang-jwt/jwt v3.2.2+incompatible
+)
 
 require (
 	github.com/BurntSushi/toml v0.3.1 // indirect
@@ -15,7 +18,6 @@ require (
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/go-kit/log v0.2.0 // indirect
 	github.com/go-logfmt/logfmt v0.5.1 // indirect
-	github.com/go-sql-driver/mysql v1.6.0 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/golang/snappy v0.0.3 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect

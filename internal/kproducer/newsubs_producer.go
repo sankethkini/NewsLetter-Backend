@@ -3,7 +3,13 @@ package kproducer
 import (
 	"context"
 
+	"github.com/pkg/errors"
+	"github.com/sankethkini/NewsLetter-Backend/pkg/apperrors"
 	"github.com/segmentio/kafka-go"
+)
+
+const (
+	errWrite = "kafka: error in writing message"
 )
 
 type Producer interface {
@@ -25,5 +31,5 @@ func (p producer) Produce(ctx context.Context, key []byte, value []byte) error {
 		Key:   key,
 		Value: value,
 	})
-	return err
+	return apperrors.E(ctx, errors.Wrapf(err, errWrite))
 }

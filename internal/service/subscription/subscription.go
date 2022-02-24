@@ -46,12 +46,6 @@ type UserSchemeRequest struct {
 	SchemeID string
 }
 
-type SchemeRequest struct {
-	name  string
-	price float64
-	days  int
-}
-
 type SearchRequest struct {
 	query string
 }
@@ -96,14 +90,6 @@ func (u UserSchemeRequest) validate() error {
 	return validation.ValidateStruct(&u,
 		validation.Field(&u.UserID, validation.Required, validation.Length(1, 100)),
 		validation.Field(&u.SchemeID, validation.Required, validation.Length(1, 100)),
-	)
-}
-
-func (s SchemeRequest) validate() error {
-	return validation.ValidateStruct(&s,
-		validation.Field(&s.days, validation.Required, validation.Min(1)),
-		validation.Field(&s.name, validation.Required, validation.Length(1, 200)),
-		validation.Field(&s.price, validation.Required, validation.Min(1.0)),
 	)
 }
 
