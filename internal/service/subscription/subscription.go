@@ -63,6 +63,7 @@ type FilterRequest struct {
 	max   float32
 }
 
+// where clause for filter request.
 func (f FilterRequest) whereClause() []func(*gorm.DB) *gorm.DB {
 	var clause []func(*gorm.DB) *gorm.DB
 	switch f.field {
@@ -78,6 +79,7 @@ func (f FilterRequest) whereClause() []func(*gorm.DB) *gorm.DB {
 	return clause
 }
 
+// where clause for search request.
 func (s SearchRequest) whereClause() []func(*gorm.DB) *gorm.DB {
 	var clause []func(*gorm.DB) *gorm.DB
 	clause = append(clause, func(d *gorm.DB) *gorm.DB {
@@ -93,6 +95,7 @@ func (u UserSchemeRequest) validate() error {
 	)
 }
 
+// model to protos and protos to model conversion.
 func SubModelToProto(mod *SubscriptionModel) *subscriptionpb.Scheme {
 	if mod == nil {
 		return &subscriptionpb.Scheme{}

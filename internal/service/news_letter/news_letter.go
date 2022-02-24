@@ -48,6 +48,7 @@ type EmailData struct {
 	Scheme newsletterpb.NewsScheme
 }
 
+// validate input.
 func (a AddSchemeRequest) validate() error {
 	return validation.ValidateStruct(&a,
 		validation.Field(&a.NewsLetterID, validation.Required, validation.Length(1, 100)),
@@ -67,6 +68,7 @@ func (mod NewsLetterModel) validate() error {
 	return nil
 }
 
+// convert model into related protobuf.
 func ModelToProto(mod *NewsLetterModel) *newsletterpb.NewsLetter {
 	if mod == nil {
 		return &newsletterpb.NewsLetter{}
@@ -89,6 +91,7 @@ func SchemeToProto(mod *NewsSchemes) newsletterpb.NewsScheme {
 	return resp
 }
 
+// convert into json string for sending to kafka broker.
 // nolint: govet
 func toJSON(n EmailData) (string, error) {
 	js, err := json.Marshal(n)
@@ -98,6 +101,7 @@ func toJSON(n EmailData) (string, error) {
 	return string(js), nil
 }
 
+// message received from kafka broker conversion into struct.
 // nolint:govet
 func ToModel(val string) (EmailData, error) {
 	var data EmailData

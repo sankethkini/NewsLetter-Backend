@@ -61,12 +61,14 @@ func (svc *service) AddSchemeToNews(ctx context.Context, req *newsletterpb.NewsS
 	r1 := ModelToProto(news)
 	res := SchemeToProto(resp)
 
+	// conversions to json string so that to send it to kafka producer.
 	data := EmailData{Letter: *r1, Scheme: res}
 	msg, err := toJSON(data)
 	if err != nil {
 		return nil, apperrors.E(ctx, err, errParsing)
 	}
 
+	// send data to kafka producer to send emails to users.
 	err = svc.kaf.Produce(ctx, []byte(req.NewsLetterId), []byte(msg))
 	if err != nil {
 		return nil, err

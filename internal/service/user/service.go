@@ -64,7 +64,10 @@ func (u *service) ValidateUser(ctx context.Context, sgn *userpb.ValidateUserRequ
 		return nil, err
 	}
 
+	// compare encrypted password and user provided password.
 	val := encryption.Compare(sgn.Password, []byte(b.Password))
+
+	// generate user token.
 	if val {
 		token, err := u.jwtManager.Generator(b.Email, enum.USER)
 		if err != nil {

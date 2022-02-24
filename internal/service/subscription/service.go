@@ -44,6 +44,7 @@ func (svc *service) AddUser(ctx context.Context, req *subscriptionpb.AddUserRequ
 		return nil, apperrors.E(ctx, errInputValues)
 	}
 
+	// add validity to number of days from now.
 	val := time.Now().AddDate(0, 0, sub.Days)
 	dbreq.Validity = val
 	resp, err := svc.repo.addUser(ctx, dbreq)
@@ -110,6 +111,8 @@ func (svc *service) Renew(ctx context.Context, req *subscriptionpb.RenewRequest)
 		return nil, err
 	}
 
+	// if subscription is already exhausted add number of days else,
+	// day when sub will exhaust + number of days.
 	usrTime := mod.Validity
 	curTime := time.Now()
 	var val time.Time
@@ -130,8 +133,10 @@ func (svc *service) Renew(ctx context.Context, req *subscriptionpb.RenewRequest)
 
 // nolint: gosec
 func (svc *service) Search(ctx context.Context, req *subscriptionpb.SearchRequest) (*subscriptionpb.SearchResponse, error) {
+	// try to get data from redis.
 	data, err := svc.redis.Get(ctx, "search"+req.String())
 
+	// if found return that.
 	if err == nil {
 		return &subscriptionpb.SearchResponse{Subs: data}, nil
 	}
@@ -147,6 +152,7 @@ func (svc *service) Search(ctx context.Context, req *subscriptionpb.SearchReques
 		res = append(res, SubModelToProto(&val))
 	}
 
+	// set data into redis cache for future use.
 	svc.redis.Set(ctx, "search"+req.String(), res)
 
 	return &subscriptionpb.SearchResponse{Subs: res}, nil

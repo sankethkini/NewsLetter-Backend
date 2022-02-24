@@ -14,7 +14,7 @@ import (
 const (
 	errInputVal      = "error in input values"
 	errEmailPassword = "email and password not matching"
-	errTokenGen      = "error in token generation"
+	errGen           = "error in token generation"
 )
 
 type Service interface {
@@ -46,14 +46,16 @@ func (adm *service) SingIn(ctx context.Context, req *adminpb.SignInRequest) (*ad
 		return nil, err
 	}
 
+	// compare encrypted password and password provided by user.
 	ok := encryption.Compare(req.Password, []byte(resp.Password))
 	if !ok {
 		return nil, apperrors.E(ctx, codes.Unauthenticated, errEmailPassword)
 	}
 
+	// generate admin token.
 	token, err := adm.jwtManager.Generator(req.Email, enum.ADMIN)
 	if err != nil {
-		return nil, apperrors.E(ctx, err, errTokenGen)
+		return nil, apperrors.E(ctx, err, errGen)
 	}
 	return &adminpb.SignInResponse{AdminId: resp.AdminID, Token: token}, nil
 }

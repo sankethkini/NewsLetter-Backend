@@ -35,6 +35,8 @@ func E(ctx context.Context, args ...interface{}) error {
 	return st.Err()
 }
 
+// parse errors check for some specific.
+// nolint:govet
 func parseError(err error) codes.Code {
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return codes.NotFound

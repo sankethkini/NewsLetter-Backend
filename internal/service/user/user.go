@@ -39,6 +39,7 @@ type GetEmailRequest struct {
 	ID string
 }
 
+// input validations.
 func (s GetEmailRequest) validate() error {
 	return validation.Validate(s.ID, validation.Required, validation.Length(1, 100))
 }
@@ -51,6 +52,7 @@ func (m UserModel) validate() error {
 	)
 }
 
+//  model to proto and proto to model conversions.
 func ModelToProto(m *UserModel) userpb.User {
 	if m == nil {
 		return userpb.User{}

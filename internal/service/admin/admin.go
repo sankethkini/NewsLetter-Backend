@@ -29,6 +29,7 @@ type SignInRequest struct {
 	Password string
 }
 
+// input validations.
 func (s SignInRequest) validate() error {
 	return validation.ValidateStruct(&s,
 		validation.Field(&s.Email, validation.Required, is.Email),
