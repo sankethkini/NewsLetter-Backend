@@ -1,6 +1,7 @@
 package subscription
 
 import (
+	"errors"
 	"time"
 
 	validation "github.com/go-ozzo/ozzo-validation"
@@ -8,6 +9,8 @@ import (
 	subscriptionpb "github.com/sankethkini/NewsLetter-Backend/proto/subscriptionpb/v1"
 	"gorm.io/gorm"
 )
+
+var errName = errors.New("name field is empty")
 
 type Metadata struct {
 	CreateTime time.Time `gorm:"column:create_time;type:datetime;default:CURRENT_TIMESTAMP;"`
@@ -86,6 +89,20 @@ func (s SearchRequest) whereClause() []func(*gorm.DB) *gorm.DB {
 		return d.Where("name like ?", "%"+s.query+"%")
 	})
 	return clause
+}
+
+func (a AddUserRequest) validate() error {
+	return validation.ValidateStruct(&a,
+		validation.Field(&a.UserID, validation.Required, validation.Length(1, 100)),
+		validation.Field(&a.SchemeID, validation.Required, validation.Length(1, 100)),
+	)
+}
+
+func (s SubscriptionModel) validate() error {
+	if validation.IsEmpty(s.Name) {
+		return errName
+	}
+	return nil
 }
 
 func (u UserSchemeRequest) validate() error {

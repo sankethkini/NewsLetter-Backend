@@ -39,6 +39,11 @@ func NewSubService(repo DB, redis cache.Service) Service {
 func (svc *service) AddUser(ctx context.Context, req *subscriptionpb.AddUserRequest) (*subscriptionpb.AddUserResponse, error) {
 	dbreq := AddUserRequest{UserID: req.UserId, SchemeID: req.SchemeId}
 
+	err := dbreq.validate()
+	if err != nil {
+		return nil, err
+	}
+
 	sub, err := svc.repo.getSubscription(ctx, req.SchemeId)
 	if err != nil {
 		return nil, apperrors.E(ctx, errInputValues)
@@ -86,6 +91,11 @@ func (svc *service) RemoveUser(ctx context.Context, req *subscriptionpb.RemoveUs
 
 func (svc *service) CreateScheme(ctx context.Context, req *subscriptionpb.CreateSchemeRequest) (*subscriptionpb.Scheme, error) {
 	mod := SubscriptionModel{SchemeID: uuid.NewString(), Name: req.Name, Days: int(req.Days), Price: float64(req.Price)}
+	err := mod.validate()
+	if err != nil {
+		return nil, err
+	}
+
 	resp, err := svc.repo.createScheme(ctx, &mod)
 	if err != nil {
 		return nil, err
