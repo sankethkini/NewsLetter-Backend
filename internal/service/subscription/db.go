@@ -17,6 +17,7 @@ const (
 	errUpdate     = "database: error in updating resource %s"
 )
 
+//go:generate mockgen -destination db_mock.go -package subscription github.com/sankethkini/NewsLetter-Backend/internal/service/subscription DB
 type DB interface {
 	addUser(context.Context, AddUserRequest) ([]UserSubscription, error)
 	removeUser(context.Context, UserSchemeRequest) ([]UserSubscription, error)

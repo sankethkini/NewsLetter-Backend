@@ -12,6 +12,7 @@ const (
 	errResourceNotFound = "database: error resource not found %s"
 )
 
+//go:generate mockgen -destination db_mock.go -package admin github.com/sankethkini/NewsLetter-Backend/internal/service/admin DB
 type DB interface {
 	getUser(ctx context.Context, req SignInRequest) (*AdminModel, error)
 }

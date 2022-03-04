@@ -12,11 +12,11 @@ import (
 
 // nolint:revive
 type AuthInterceptor struct {
-	jwtManager      *JWTManager
+	jwtManager      JWTManager
 	accessibleRoles map[string][]string
 }
 
-func NewAuthInterceptor(jwtManager *JWTManager, accRoles map[string][]string) *AuthInterceptor {
+func NewAuthInterceptor(jwtManager JWTManager, accRoles map[string][]string) *AuthInterceptor {
 	return &AuthInterceptor{jwtManager, accRoles}
 }
 

@@ -13,6 +13,7 @@ const (
 	errFind         = "database: error in finding %s"
 )
 
+//go:generate mockgen -destination db_mock.go -package user github.com/sankethkini/NewsLetter-Backend/internal/service/user DB
 type DB interface {
 	insertUser(ctx context.Context, m *UserModel) (*UserModel, error)
 	getUser(ctx context.Context, s SignInRequest) (*UserModel, error)

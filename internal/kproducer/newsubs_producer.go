@@ -12,6 +12,7 @@ const (
 	errWrite = "kafka: error in writing message"
 )
 
+//go:generate mockgen -destination kafka_mock.go -package kproducer github.com/sankethkini/NewsLetter-Backend/internal/kproducer Producer
 type Producer interface {
 	Produce(context.Context, []byte, []byte) error
 }

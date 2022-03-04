@@ -23,10 +23,10 @@ type Service interface {
 
 type service struct {
 	repo       DB
-	jwtManager *auth.JWTManager
+	jwtManager auth.JWTManager
 }
 
-func NewAdminService(repo DB, jwt *auth.JWTManager) Service {
+func NewAdminService(repo DB, jwt auth.JWTManager) Service {
 	return &service{
 		repo:       repo,
 		jwtManager: jwt,

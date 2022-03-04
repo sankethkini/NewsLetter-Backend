@@ -13,6 +13,7 @@ const (
 	errCreate           = "database: error in creating resource %s"
 )
 
+//go:generate mockgen -destination db_mock.go -package newsletter github.com/sankethkini/NewsLetter-Backend/internal/service/news_letter DB
 type DB interface {
 	addNewsLetter(context.Context, *NewsLetterModel) (*NewsLetterModel, error)
 	addSchemeToNews(context.Context, AddSchemeRequest) (*NewsSchemes, error)

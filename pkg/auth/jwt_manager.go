@@ -13,7 +13,13 @@ type JWTConfig struct {
 	Duration int    `yaml:"duration"`
 }
 
-type JWTManager struct {
+//go:generate mockgen -destination jwt_mock.go -package auth github.com/sankethkini/NewsLetter-Backend/pkg/auth JWTManager
+type JWTManager interface {
+	Generator(string, enum.Access) (string, error)
+	Validate(string) (*UserClaims, error)
+}
+
+type jwtManager struct {
 	secretKey     string
 	tokenDuration time.Duration
 }
@@ -24,15 +30,15 @@ type UserClaims struct {
 	Role  string
 }
 
-func NewJWTManager(cfg JWTConfig) *JWTManager {
-	return &JWTManager{
+func NewJWTManager(cfg JWTConfig) JWTManager {
+	return &jwtManager{
 		secretKey:     cfg.Secret,
 		tokenDuration: time.Hour * time.Duration(cfg.Duration),
 	}
 }
 
 // generate new token.
-func (manager *JWTManager) Generator(email string, role enum.Access) (string, error) {
+func (manager *jwtManager) Generator(email string, role enum.Access) (string, error) {
 	claims := UserClaims{
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: time.Now().Add(manager.tokenDuration).Unix(),
@@ -45,7 +51,7 @@ func (manager *JWTManager) Generator(email string, role enum.Access) (string, er
 }
 
 // validate the token.
-func (manager *JWTManager) Validate(accessToken string) (*UserClaims, error) {
+func (manager *jwtManager) Validate(accessToken string) (*UserClaims, error) {
 	token, err := jwt.ParseWithClaims(accessToken,
 		&UserClaims{},
 		func(t *jwt.Token) (interface{}, error) {

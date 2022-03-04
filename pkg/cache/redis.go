@@ -17,6 +17,7 @@ type RedisConfig struct {
 	ExpireIn int64  `yaml:"expire"`
 }
 
+//go:generate mockgen -destination redis_mock.go -package cache github.com/sankethkini/NewsLetter-Backend/pkg/cache Service
 type Service interface {
 	Set(ctx context.Context, key string, value []*subscriptionpb.Scheme)
 	Get(ctx context.Context, key string) ([]*subscriptionpb.Scheme, error)
