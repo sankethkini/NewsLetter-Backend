@@ -41,17 +41,18 @@ func parseError(err error) codes.Code {
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return codes.NotFound
 	}
-	var mysqlErr *mysql.MySQLError
-	check := errors.As(err, mysqlErr)
-	if check {
-		switch mysqlErr.Number {
-		case 1062:
-			return codes.AlreadyExists
-		case 1452:
-			return codes.AlreadyExists
-		default:
-			return codes.Unknown
-		}
+	err1, ok := err.(*mysql.MySQLError)
+	if !ok {
+		return codes.Unknown
 	}
-	return codes.Unknown
+
+	switch err1.Number {
+	case 1062:
+		return codes.AlreadyExists
+	case 1452:
+		return codes.AlreadyExists
+	default:
+		return codes.Unknown
+	}
+
 }
