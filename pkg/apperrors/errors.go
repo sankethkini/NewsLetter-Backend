@@ -50,7 +50,7 @@ func parseError(err error) codes.Code {
 	case 1062:
 		return codes.AlreadyExists
 	case 1452:
-		return codes.AlreadyExists
+		return codes.NotFound
 	default:
 		return codes.Unknown
 	}
