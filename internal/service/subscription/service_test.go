@@ -12,6 +12,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+var errNotFound = errors.New("not found")
+
 func TestAddUserSuccess(t *testing.T) {
 	ctx := context.Background()
 	ctrl := gomock.NewController(t)
@@ -115,7 +117,7 @@ func TestSearchSuccess(t *testing.T) {
 			Days:     28,
 		},
 	}, nil).Times(1)
-	mockRedis.EXPECT().Get(gomock.Any(), gomock.Any()).Return(nil, errors.New("not found")).Times(1)
+	mockRedis.EXPECT().Get(gomock.Any(), gomock.Any()).Return(nil, errNotFound).Times(1)
 	mockRedis.EXPECT().Set(gomock.Any(), gomock.Any(), gomock.Any()).Return().Times(1)
 	svc := NewSubService(mockDB, mockRedis)
 	resp, err := svc.Search(ctx, &v1.SearchRequest{Text: "some"})
@@ -136,7 +138,7 @@ func TestSortSuccess(t *testing.T) {
 			Days:     28,
 		},
 	}, nil).Times(1)
-	mockRedis.EXPECT().Get(gomock.Any(), gomock.Any()).Return(nil, errors.New("not found")).Times(1)
+	mockRedis.EXPECT().Get(gomock.Any(), gomock.Any()).Return(nil, errNotFound).Times(1)
 	mockRedis.EXPECT().Set(gomock.Any(), gomock.Any(), gomock.Any()).Return().Times(1)
 	svc := NewSubService(mockDB, mockRedis)
 	resp, err := svc.Sort(ctx, &v1.SortRequest{Field: v1.Field_DAYS})
@@ -157,7 +159,7 @@ func TestFilterSuccess(t *testing.T) {
 			Days:     28,
 		},
 	}, nil).Times(1)
-	mockRedis.EXPECT().Get(gomock.Any(), gomock.Any()).Return(nil, errors.New("not found")).Times(1)
+	mockRedis.EXPECT().Get(gomock.Any(), gomock.Any()).Return(nil, errNotFound).Times(1)
 	mockRedis.EXPECT().Set(gomock.Any(), gomock.Any(), gomock.Any()).Return().Times(1)
 	svc := NewSubService(mockDB, mockRedis)
 	resp, err := svc.Filter(ctx, &v1.FilterRequest{Field: v1.Field_DAYS, Min: 12, Max: 30})
