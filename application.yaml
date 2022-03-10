@@ -1,0 +1,39 @@
+database:
+  user: root
+  password: 1234
+  host: localhost:3306
+  name: newdb
+  maxIdleConnections: 5
+  maxOpenConnections: 5
+  disableTLS: true
+  debug: true
+
+jwt:
+  secret: "some secret"
+  duration: 24
+
+server:
+  host: "127.0.0.1"
+  port: "9000"
+
+redis:
+  host: "127.0.0.1:6379"
+  db: 10
+  password: ""
+  expire: 100
+
+kafkac:
+  topic: "my-kafka-topic"
+  groupID: "g1"
+  brokers: ["localhost:9093"]
+
+kafkap:
+  topic: "my-kafka-topic"
+  brokers: ["localhost:9093"]
+
+email:
+  from: "addemail@gmail.com"
+  password: "add password"
+  host: "smtp.gmail.com"
+  port: "587"
+  server: "localhost:9000"
